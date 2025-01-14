@@ -1,15 +1,24 @@
 package com.example.meroPASAL.security.user;
 
+import com.example.meroPASAL.model.user.User;
+import com.example.meroPASAL.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
-public class ShopUserDeatilServices implements UserDetailsService {
+@Service
+@RequiredArgsConstructor
+public class ShopUserDetailServices implements UserDetailsService {
 
-
+    private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return null;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        return ShopUserDetails.buildUserDetails(user);
     }
 }
