@@ -1,17 +1,16 @@
-package com.dipakraut.eCommerce.model;
+package com.example.meroPASAL.model.user;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
+@Entity
 @Getter
 @Setter
-@Entity
 @NoArgsConstructor
 public class Role {
     @Id
@@ -23,10 +22,4 @@ public class Role {
     public Role(String name) {
         this.name = name;
     }
-
-    @ManyToMany(
-            mappedBy = "roles"
-    )
-    private Collection<User> user = new HashSet<>();
-
 }
