@@ -1,67 +1,33 @@
-package com.dipakraut.eCommerce.model;
+package com.example.meroPASAL.model.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.catalina.LifecycleState;
-import org.hibernate.annotations.NaturalId;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
 
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class User {
+public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String firstName;
-    private String lastName;
-    @NaturalId
+
+    private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String password;
 
-    @JsonIgnore
-    @OneToOne(
-            mappedBy = "user",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-
-    )
-    private Cart cart;
-
-
-    @OneToMany(
-            mappedBy = "user",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-
-    )
-    private List<Order> order = new ArrayList<>();
-
-    @ManyToMany(
-            fetch = FetchType.EAGER,
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE,
-                    CascadeType.DETACH,
-                    CascadeType.REFRESH
-
-            }
-    )
-    @JoinTable(name = "users_roles",joinColumns = @JoinColumn(name = "user_id",
-            referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id",
-            referencedColumnName = "id")
-            )
-
-    private Collection<Role> roles = new HashSet<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles;
 }
