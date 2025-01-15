@@ -1,5 +1,6 @@
 package com.example.meroPASAL.controller;
 
+import com.example.meroPASAL.dto.LoginRequest;
 import com.example.meroPASAL.model.user.Customer;
 import com.example.meroPASAL.model.user.Role;
 import com.example.meroPASAL.model.user.Shopkeeper;
@@ -59,7 +60,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
