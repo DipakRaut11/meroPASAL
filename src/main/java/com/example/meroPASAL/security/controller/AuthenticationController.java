@@ -24,6 +24,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("${api.prefix}/auth")
+@CrossOrigin(origins = "*", allowedHeaders = "*") // for development purposes
 @RequiredArgsConstructor
 public class AuthenticationController {
 
