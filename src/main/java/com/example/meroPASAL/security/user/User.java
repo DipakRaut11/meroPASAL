@@ -1,4 +1,4 @@
-package com.example.meroPASAL.model.user;
+package com.example.meroPASAL.security.user;
 
 import jakarta.persistence.*;
 import lombok.Getter;

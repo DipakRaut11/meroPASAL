@@ -1,7 +1,6 @@
 package com.example.meroPASAL.security.user;
 
-import com.example.meroPASAL.model.user.User;
-import com.example.meroPASAL.repository.UserRepository;
+import com.example.meroPASAL.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -1,4 +1,4 @@
-package com.example.meroPASAL.response;
+package com.example.meroPASAL.security.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

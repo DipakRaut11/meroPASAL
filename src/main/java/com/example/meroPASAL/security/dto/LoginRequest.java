@@ -1,4 +1,4 @@
-package com.example.meroPASAL.dto;
+package com.example.meroPASAL.security.dto;
 
 import lombok.Data;
 

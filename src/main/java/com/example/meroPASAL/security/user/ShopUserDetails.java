@@ -1,6 +1,5 @@
 package com.example.meroPASAL.security.user;
 
-import com.example.meroPASAL.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
