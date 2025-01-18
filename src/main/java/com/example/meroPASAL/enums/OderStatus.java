@@ -1,4 +1,4 @@
-package com.dipakraut.eCommerce.enums;
+package com.example.meroPASAL.enums;
 
 public enum OderStatus {
     PENDING,
