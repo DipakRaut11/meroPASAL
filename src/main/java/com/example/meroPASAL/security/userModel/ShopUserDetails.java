@@ -1,4 +1,4 @@
-package com.example.meroPASAL.security.user;
+package com.example.meroPASAL.security.userModel;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

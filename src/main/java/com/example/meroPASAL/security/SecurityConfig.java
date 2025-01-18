@@ -1,10 +1,9 @@
 package com.example.meroPASAL.security;
 
 
-import com.example.meroPASAL.security.jwt.AuthEntryPoint;
 import com.example.meroPASAL.security.jwt.AuthTokenFilter;
 import com.example.meroPASAL.security.jwt.JwtUtils;
-import com.example.meroPASAL.security.user.ShopUserDetailServices;
+import com.example.meroPASAL.security.userModel.ShopUserDetailServices;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

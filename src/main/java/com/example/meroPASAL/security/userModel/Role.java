@@ -1,4 +1,4 @@
-package com.example.meroPASAL.security.user;
+package com.example.meroPASAL.security.userModel;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,4 +1,4 @@
-package com.example.meroPASAL.security.user;
+package com.example.meroPASAL.security.userModel;
 
 import com.example.meroPASAL.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

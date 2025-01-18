@@ -1,6 +1,6 @@
 package com.example.meroPASAL.security.repository;
 
-import com.example.meroPASAL.security.user.User;
+import com.example.meroPASAL.security.userModel.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

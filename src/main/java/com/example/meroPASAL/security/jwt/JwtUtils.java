@@ -1,6 +1,6 @@
 package com.example.meroPASAL.security.jwt;
 
-import com.example.meroPASAL.security.user.ShopUserDetails;
+import com.example.meroPASAL.security.userModel.ShopUserDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

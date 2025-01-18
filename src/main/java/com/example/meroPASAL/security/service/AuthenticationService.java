@@ -5,11 +5,11 @@ import com.example.meroPASAL.security.jwt.JwtUtils;
 import com.example.meroPASAL.security.repository.RoleRepository;
 import com.example.meroPASAL.security.repository.UserRepository;
 import com.example.meroPASAL.security.response.SignUpResponse;
-import com.example.meroPASAL.security.user.Customer;
-import com.example.meroPASAL.security.user.Role;
-import com.example.meroPASAL.security.user.ShopUserDetails;
-import com.example.meroPASAL.security.user.Shopkeeper;
-import com.example.meroPASAL.security.user.User;
+import com.example.meroPASAL.security.userModel.Customer;
+import com.example.meroPASAL.security.userModel.Role;
+import com.example.meroPASAL.security.userModel.ShopUserDetails;
+import com.example.meroPASAL.security.userModel.Shopkeeper;
+import com.example.meroPASAL.security.userModel.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.Set;
 
 @Service

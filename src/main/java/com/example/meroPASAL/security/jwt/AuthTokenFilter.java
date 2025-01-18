@@ -1,6 +1,6 @@
 package com.example.meroPASAL.security.jwt;
 
-import com.example.meroPASAL.security.user.ShopUserDetailServices;
+import com.example.meroPASAL.security.userModel.ShopUserDetailServices;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
