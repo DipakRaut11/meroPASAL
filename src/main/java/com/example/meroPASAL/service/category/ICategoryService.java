@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface ICategoryService {
     Category getCategoryById(Long id);
-    void deleteCategory(Long id);
+    void deleteCategoryById(Long id);
     Category addCategory(Category category);
     Category updateCategory(Category category, Long categoryId);
     List<Category> getAllCategories();
