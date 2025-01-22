@@ -1,5 +1,6 @@
-package com.dipakraut.eCommerce.model;
+package com.example.meroPASAL.model;
 
+import com.example.meroPASAL.security.userModel.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
