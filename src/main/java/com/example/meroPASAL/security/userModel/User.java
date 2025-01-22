@@ -1,5 +1,7 @@
 package com.example.meroPASAL.security.userModel;
 
+import com.example.meroPASAL.model.Cart;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +26,14 @@ public abstract class User {
 
     @Column(nullable = false)
     private String password;
+    @JsonIgnore
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+
+    )
+    private Cart cart;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
