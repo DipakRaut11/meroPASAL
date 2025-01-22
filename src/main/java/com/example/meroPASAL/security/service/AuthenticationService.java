@@ -7,7 +7,6 @@ import com.example.meroPASAL.security.repository.UserRepository;
 import com.example.meroPASAL.security.response.SignUpResponse;
 import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.security.userModel.Role;
-import com.example.meroPASAL.security.userModel.ShopUserDetails;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.example.meroPASAL.security.userModel.User;
 import jakarta.validation.Valid;
@@ -15,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +37,7 @@ public class AuthenticationService {
         }
 
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
-        assignDefaultRole(customer, "CUSTOMER");
+        assignDefaultRole(customer, "ROLE_CUSTOMER");
         userRepository.save(customer);
 
         return new SignUpResponse("Customer registered successfully");
@@ -49,7 +49,7 @@ public class AuthenticationService {
         }
 
         shopkeeper.setPassword(passwordEncoder.encode(shopkeeper.getPassword()));
-        assignDefaultRole(shopkeeper, "SHOPKEEPER");
+        assignDefaultRole(shopkeeper, "ROLE_SHOPKEEPER");
         userRepository.save(shopkeeper);
 
         return new SignUpResponse("Shopkeeper registered successfully");
@@ -78,5 +78,13 @@ public class AuthenticationService {
         Role role = roleRepository.findByName(roleName)
                 .orElseGet(() -> roleRepository.save(new Role(roleName)));
         user.setRoles(Set.of(role));
+    }
+
+
+    public User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(()-> new RuntimeException("User not found"));
     }
 }
