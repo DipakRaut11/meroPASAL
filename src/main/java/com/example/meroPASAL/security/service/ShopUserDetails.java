@@ -1,5 +1,6 @@
-package com.example.meroPASAL.security.userModel;
+package com.example.meroPASAL.security.service;
 
+import com.example.meroPASAL.security.userModel.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -70,8 +71,10 @@ public class ShopUserDetails implements UserDetails {
         return UserDetails.super.isCredentialsNonExpired();
     }
 
+   //change
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.authorities != null && !this.authorities.isEmpty();
     }
+
 }
