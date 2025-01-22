@@ -1,6 +1,7 @@
-package com.dipakraut.eCommerce.service.cart;
+package com.example.meroPASAL.service.cart;
 
-import com.dipakraut.eCommerce.model.CartItem;
+
+import com.example.meroPASAL.model.CartItem;
 
 public interface ICartItemService {
 
