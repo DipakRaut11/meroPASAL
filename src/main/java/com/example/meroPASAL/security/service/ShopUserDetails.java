@@ -71,7 +71,7 @@ public class ShopUserDetails implements UserDetails {
         return UserDetails.super.isCredentialsNonExpired();
     }
 
-   //change
+
     @Override
     public boolean isEnabled() {
         return this.authorities != null && !this.authorities.isEmpty();
