@@ -3,7 +3,7 @@ package com.example.meroPASAL.security;
 
 import com.example.meroPASAL.security.jwt.AuthTokenFilter;
 import com.example.meroPASAL.security.jwt.JwtUtils;
-import com.example.meroPASAL.security.userModel.ShopUserDetailServices;
+import com.example.meroPASAL.security.service.ShopUserDetailServices;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
@@ -35,7 +35,7 @@ public class SecurityConfig {
     private final JwtUtils jwtUtils;
 
     private static final List<String> SECURED_URLS =
-            List.of("/api/v1/customer/**", "/api/v1/shopkeeper/**");
+            List.of("/api/v1/carts/**", "/api/v1/cartsItems/**");
 
 
     @Bean
