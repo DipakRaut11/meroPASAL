@@ -1,4 +1,4 @@
-package com.dipakraut.eCommerce.dto.cart;
+package com.example.meroPASAL.dto.cart;
 
 import lombok.Data;
 
