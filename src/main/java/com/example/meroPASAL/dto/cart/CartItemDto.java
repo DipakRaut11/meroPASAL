@@ -1,6 +1,7 @@
-package com.dipakraut.eCommerce.dto.cart;
+package com.example.meroPASAL.dto.cart;
 
-import com.dipakraut.eCommerce.dto.product.ProductDto;
+
+import com.example.meroPASAL.dto.ProductDto;
 import lombok.Data;
 
 import java.math.BigDecimal;
