@@ -1,14 +1,14 @@
-package com.dipakraut.eCommerce.controller;
+package com.example.meroPASAL.controller;
 
-import com.dipakraut.eCommerce.dto.order.OrderDto;
-import com.dipakraut.eCommerce.exception.ResourceNotFoundException;
-import com.dipakraut.eCommerce.model.Order;
-import com.dipakraut.eCommerce.response.ApiResponse;
-import com.dipakraut.eCommerce.service.order.IOrderService;
+import com.example.meroPASAL.dto.order.OrderDto;
+import com.example.meroPASAL.exception.ResourceNotFoundException;
+import com.example.meroPASAL.model.Order;
+import com.example.meroPASAL.response.ApiResponse;
+import com.example.meroPASAL.service.order.IOrderService;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.LifecycleState;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +16,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
+@PreAuthorize("hasRole('ROLE_CUSTOMER')")
 @RequestMapping("${api.prefix}/orders")
 public class OrderController {
 
