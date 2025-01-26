@@ -1,15 +1,16 @@
-package com.dipakraut.eCommerce.service.order;
+package com.example.meroPASAL.service.order;
 
-import com.dipakraut.eCommerce.dto.order.OrderDto;
-import com.dipakraut.eCommerce.enums.OderStatus;
-import com.dipakraut.eCommerce.exception.ResourceNotFoundException;
-import com.dipakraut.eCommerce.model.Cart;
-import com.dipakraut.eCommerce.model.Order;
-import com.dipakraut.eCommerce.model.OrderItem;
-import com.dipakraut.eCommerce.model.Product;
-import com.dipakraut.eCommerce.repository.order.OrderRepository;
-import com.dipakraut.eCommerce.repository.product.ProductRepository;
-import com.dipakraut.eCommerce.service.cart.CartService;
+
+import com.example.meroPASAL.Repository.ProductRepo;
+import com.example.meroPASAL.Repository.order.OrderRepository;
+import com.example.meroPASAL.dto.order.OrderDto;
+import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.exception.ResourceNotFoundException;
+import com.example.meroPASAL.model.Cart;
+import com.example.meroPASAL.model.Order;
+import com.example.meroPASAL.model.OrderItem;
+import com.example.meroPASAL.model.Product;
+import com.example.meroPASAL.service.cart.CartService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ import java.util.List;
 public class OrderService implements IOrderService {
 
     private final OrderRepository orderRpository;
-    private final ProductRepository productRepository;
+    private final ProductRepo productRepository;
     private final CartService cartService;
     private final ModelMapper modelMapper;
 
