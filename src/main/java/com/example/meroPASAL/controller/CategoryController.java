@@ -5,6 +5,7 @@ import com.example.meroPASAL.response.ApiResponse;
 import com.example.meroPASAL.service.category.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,16 +32,19 @@ public class CategoryController {
         return ResponseEntity.ok(new ApiResponse("Category fetched successfully", category));
     }
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ROLE_SHOPKEEPER')")
     public ResponseEntity<ApiResponse> deleteCategoryById(@PathVariable Long id){
         categoryService.deleteCategoryById(id);
        return ResponseEntity.ok(new ApiResponse("Category deleted successfully", null));
     }
     @PostMapping("/add")
+    @PreAuthorize("hasRole('ROLE_SHOPKEEPER')")
     public ResponseEntity<ApiResponse> addCategory(@RequestBody Category category){
         Category cat = categoryService.addCategory(category);
         return ResponseEntity.ok(new ApiResponse("Category added successfully", cat));
     }
     @PutMapping("update/{id}")
+    @PreAuthorize("hasRole('ROLE_SHOPKEEPER')")
     public ResponseEntity<ApiResponse> updateCategory(@RequestBody Category category, @PathVariable Long id){
         Category cat = categoryService.updateCategory(category, id);
         return ResponseEntity.ok(new ApiResponse("Category updated successfully", cat));
