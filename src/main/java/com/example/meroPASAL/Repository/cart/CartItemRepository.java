@@ -1,7 +1,8 @@
-package com.dipakraut.eCommerce.repository.cart;
-import com.dipakraut.eCommerce.model.Cart;
-import com.dipakraut.eCommerce.model.CartItem;
+package com.example.meroPASAL.Repository.cart;
+
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.meroPASAL.model.CartItem;
 
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
