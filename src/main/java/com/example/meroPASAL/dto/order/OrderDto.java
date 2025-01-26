@@ -1,6 +1,7 @@
-package com.dipakraut.eCommerce.dto.order;
+package com.example.meroPASAL.dto.order;
 
-import com.dipakraut.eCommerce.enums.OderStatus;
+
+import com.example.meroPASAL.enums.OderStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
