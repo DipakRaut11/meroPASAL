@@ -1,7 +1,9 @@
-package com.dipakraut.eCommerce.service.order;
+package com.example.meroPASAL.service.order;
 
-import com.dipakraut.eCommerce.dto.order.OrderDto;
-import com.dipakraut.eCommerce.model.Order;
+
+
+import com.example.meroPASAL.dto.order.OrderDto;
+import com.example.meroPASAL.model.Order;
 
 import java.util.List;
 
