@@ -1,6 +1,8 @@
-package com.dipakraut.eCommerce.model;
+package com.example.meroPASAL.model;
 
-import com.dipakraut.eCommerce.enums.OderStatus;
+
+import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.security.userModel.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
