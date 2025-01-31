@@ -1,6 +1,5 @@
 package com.example.meroPASAL.security;
 
-
 import com.example.meroPASAL.security.jwt.AuthTokenFilter;
 import com.example.meroPASAL.security.jwt.JwtUtils;
 import com.example.meroPASAL.security.service.ShopUserDetailServices;
@@ -21,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
@@ -35,8 +37,7 @@ public class SecurityConfig {
     private final JwtUtils jwtUtils;
 
     private static final List<String> SECURED_URLS =
-            List.of("/api/v1/carts/**", "/api/v1/cartsItems/**");
-
+            List.of("/api/v1/carts/**", "/api/v1/cartsItems/**", "/api/v1/auth/user");
 
     @Bean
     public ModelMapper modelMapper() {
@@ -71,6 +72,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.requestMatchers(SECURED_URLS.toArray(String[]::new)).authenticated()
@@ -80,4 +82,19 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * CORS Configuration to allow requests from frontend (React)
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000")); // Allow frontend origin
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow necessary HTTP methods
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allow specific headers
+        config.setAllowCredentials(true); // Allow sending cookies & authentication tokens
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }
