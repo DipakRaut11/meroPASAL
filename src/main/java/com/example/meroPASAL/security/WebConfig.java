@@ -12,6 +12,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:3000") // Updated to Vite's default port
                 .allowedMethods("*"); // Allow all HTTP methods (GET, POST, etc.)
     }
-
-
 }
