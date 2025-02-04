@@ -120,7 +120,7 @@ public class ProductController {
 
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('SHOPKEEPER')")
+    @PreAuthorize("hasRole('ROLE_SHOPKEEPER')")
     public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long id){
         try {
             productService.deleteProduct(id);
@@ -130,7 +130,7 @@ public class ProductController {
         }
     }
     @PutMapping("/{id}/update")
-    @PreAuthorize("hasRole('SHOPKEEPER')")
+    @PreAuthorize("hasRole('ROLE_SHOPKEEPER')")
     public ResponseEntity<ApiResponse> updateProduct(@RequestBody ProductUpdateRequest request,@PathVariable Long id){
         try {
             productService.updateProduct(request, id);
