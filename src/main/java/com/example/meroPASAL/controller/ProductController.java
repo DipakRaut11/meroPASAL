@@ -140,4 +140,10 @@ public class ProductController {
                     .body(new ApiResponse(e.getMessage(), null));        }
 
     }
+
+    @GetMapping("/sorted-by-price")
+    public ResponseEntity<List<Product>> getSortedProducts() {
+        return ResponseEntity.ok(productService.getProductsSortedByPriceAsc());
+    }
+
 }

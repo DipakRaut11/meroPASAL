@@ -10,6 +10,7 @@ import java.sql.Blob;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 public class Image {
     @Id
@@ -27,4 +28,6 @@ public class Image {
     )
     @JsonIgnore
     private Product product;
+
+
 }

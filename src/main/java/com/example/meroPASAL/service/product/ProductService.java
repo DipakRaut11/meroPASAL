@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -145,4 +146,14 @@ public class ProductService implements IProductService {
 
         return productDto;
     }
+
+    // Bubble sort by price in ascending order
+    @Override
+    public List<Product> getProductsSortedByPriceAsc() {
+        List<Product> products = productRepo.findAll();
+        products.sort(Comparator.comparing(Product::getPrice));
+        return products;
+    }
+
+
 }
