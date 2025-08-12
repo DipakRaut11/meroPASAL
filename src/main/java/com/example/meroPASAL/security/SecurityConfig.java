@@ -37,7 +37,7 @@ public class SecurityConfig {
     private final JwtUtils jwtUtils;
 
     private static final List<String> SECURED_URLS =
-            List.of("/api/v1/carts/**", "/api/v1/cartsItems/**", "/api/v1/auth/user");
+            List.of("/api/v1/carts/**", "/api/v1/cartsItems/**", "/api/v1/auth/user", "/api/v1/products/add");
 
     @Bean
     public ModelMapper modelMapper() {
