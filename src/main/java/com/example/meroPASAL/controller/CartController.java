@@ -54,7 +54,7 @@ public class CartController {
 //        return ResponseEntity.ok(new ApiResponse("Success", cart));
 //    }
 
-    // ✅ New endpoint: get logged-in user's cart
+    //  New endpoint: get logged-in user's cart
     @GetMapping("/my-cart")
     public ResponseEntity<ApiResponse> getMyCart() {
         User user = authenticationService.getAuthenticatedUser();
