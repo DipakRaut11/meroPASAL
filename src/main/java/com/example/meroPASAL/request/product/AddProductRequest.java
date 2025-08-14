@@ -1,6 +1,7 @@
 package com.example.meroPASAL.request.product;
 
 import com.example.meroPASAL.model.Category;
+import com.example.meroPASAL.security.userModel.Shopkeeper;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -14,4 +15,6 @@ public class AddProductRequest {
     private int inventory;
     private String description;
     private Category category;
+
+    private Shopkeeper shopkeeper;
 }
