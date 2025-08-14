@@ -1,6 +1,5 @@
 package com.example.meroPASAL.service.order;
 
-
 import com.example.meroPASAL.Repository.ProductRepo;
 import com.example.meroPASAL.Repository.order.OrderRepository;
 import com.example.meroPASAL.dto.order.OrderDto;
@@ -29,20 +28,19 @@ public class OrderService implements IOrderService {
     private final CartService cartService;
     private final ModelMapper modelMapper;
 
-
     @Override
     public Order placeOrder(Long userId) {
         Cart cart = cartService.getCartByUserId(userId);
 
         Order order = createOrder(cart);
-        List<OrderItem> orderItemList = createOrerItems(order, cart);
+        List<OrderItem> orderItemList = createOrderItems(order, cart);
 
         order.setOrderItems(new HashSet<>(orderItemList));
         order.setTotalAmount(calculateTotalAmount(orderItemList));
-        Order saveOrder = orderRpository.save(order);
+        Order savedOrder = orderRpository.save(order);
         cartService.clearCart(cart.getId());
 
-        return saveOrder;
+        return savedOrder;
     }
 
     private Order createOrder(Cart cart) {
@@ -51,10 +49,9 @@ public class OrderService implements IOrderService {
         order.setOrderStatus(OderStatus.PENDING);
         order.setOrderDate(LocalDate.now());
         return order;
-
     }
 
-    private List<OrderItem> createOrerItems(Order order, Cart cart) {
+    private List<OrderItem> createOrderItems(Order order, Cart cart) {
         return cart.getItems()
                 .stream()
                 .map(cartItem -> {
@@ -66,38 +63,44 @@ public class OrderService implements IOrderService {
                             product,
                             cartItem.getQuantity(),
                             cartItem.getUnitPrice()
-
-
                     );
                 }).toList();
     }
 
-    private BigDecimal calculateTotalAmount(List<OrderItem> orderItermList) {
-            return orderItermList.stream()
-                    .map(item -> item.getPrice()
-                            .multiply(new BigDecimal(item.getQuantity())))
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    private BigDecimal calculateTotalAmount(List<OrderItem> orderItemList) {
+        return orderItemList.stream()
+                .map(item -> item.getPrice()
+                        .multiply(new BigDecimal(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
 
     @Override
     public OrderDto getOrderById(Long orderId) {
         return orderRpository.findById(orderId)
-                .map(this :: convertToDto)
+                .map(this::convertToDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+    }
+
+    // New: Enforce user-specific order access here
+    @Override
+    public OrderDto getOrderByIdForUser(Long orderId, Long userId) {
+        Order order = orderRpository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Order not found for this user");
+        }
+
+        return convertToDto(order);
     }
 
     @Override
     public List<OrderDto> getUserOrders(Long userId) {
         List<Order> orders = orderRpository.findByUserId(userId);
         return orders.stream()
-                .map(this :: convertToDto)
+                .map(this::convertToDto)
                 .toList();
     }
-
-
-    
-
 
     @Override
     public OrderDto convertToDto(Order order){
