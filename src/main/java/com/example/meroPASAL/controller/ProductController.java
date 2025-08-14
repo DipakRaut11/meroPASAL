@@ -1,15 +1,14 @@
 package com.example.meroPASAL.controller;
 
 import com.example.meroPASAL.dto.ProductDto;
-import com.example.meroPASAL.exception.ProductAlreadyExists;
 import com.example.meroPASAL.exception.ResourceNotFoundException;
 import com.example.meroPASAL.model.Product;
+import com.example.meroPASAL.response.ApiResponse;
+import com.example.meroPASAL.security.service.AuthenticationService;
+import com.example.meroPASAL.security.userModel.Shopkeeper;
+import com.example.meroPASAL.service.product.IProductService;
 import com.example.meroPASAL.request.product.AddProductRequest;
 import com.example.meroPASAL.request.product.ProductUpdateRequest;
-import com.example.meroPASAL.response.ApiResponse;
-import com.example.meroPASAL.service.product.IProductService;
-import com.example.meroPASAL.service.product.ProductService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,132 +17,73 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("${api.prefix}/products")
+@RequiredArgsConstructor
 public class ProductController {
+
     private final IProductService productService;
+    private final AuthenticationService authService;
 
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse> getAllProduct(){
-        try {
-            List<Product> products = productService.getAllProducts();
-            List<ProductDto> productDtos = productService.getConvertedProducts(products);
-            return ResponseEntity.ok().body(new ApiResponse("All Products", productDtos));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse("Empty", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
+    // ---------------- CUSTOMER ----------------
+    @GetMapping("/customer/all")
+    public ResponseEntity<ApiResponse> getAllProductsForCustomer() {
+        List<Product> products = productService.getAllProducts();
+        List<ProductDto> productDtos = productService.getConvertedProducts(products);
+        return ResponseEntity.ok(new ApiResponse("All products for customer", productDtos));
     }
+
+    // ---------------- SHOPKEEPER ----------------
+    @GetMapping("/shopkeeper/all")
+    @PreAuthorize("hasRole('SHOPKEEPER')")
+    public ResponseEntity<ApiResponse> getAllProductsForShopkeeper() {
+        var user = authService.getAuthenticatedUser();
+        if (!(user instanceof Shopkeeper)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse("Access denied", null));
+        }
+        Shopkeeper shopkeeper = (Shopkeeper) user;
+        List<Product> products = productService.getProductsByShopkeeper(shopkeeper.getId());
+        List<ProductDto> productDtos = productService.getConvertedProducts(products);
+        return ResponseEntity.ok(new ApiResponse("All products for shopkeeper", productDtos));
+    }
+
+    // ---------------- COMMON ----------------
     @GetMapping("/product/{id}")
-    public ResponseEntity<ApiResponse> getProductById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse> getProductById(@PathVariable Long id) {
         try {
-            Product products = productService.getProductById(id);
-            ProductDto productDtos = productService.convertToDto(products);
-            return ResponseEntity.ok().body(new ApiResponse("Product found by id "+ id, productDtos));
+            Product product = productService.getProductById(id);
+            ProductDto productDto = productService.convertToDto(product);
+            return ResponseEntity.ok(new ApiResponse("Product found by id " + id, productDto));
         } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse("Product with ID "+ id+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
-    }
-    @GetMapping("/category/{category}")
-    public ResponseEntity<ApiResponse> getAllProductByCategory(@PathVariable String category){
-        try {
-            List<Product> products = productService.getProductsByCategory(category);
-            List<ProductDto> productDtos = productService.getConvertedProducts(products);
-            return ResponseEntity.ok().body(new ApiResponse("Product retrieve by category name "+category, productDtos));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse("Product with category "+ category+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-
-        }
-    }
-    @GetMapping("/brand/{brand}")
-    public ResponseEntity<ApiResponse> getAllProductByBrand(@PathVariable String brand){
-        try {
-            List<Product> products = productService.getProductByBrand(brand);
-            List<ProductDto> productDtos = productService.getConvertedProducts(products);
-            return ResponseEntity.ok().body(new ApiResponse("Product found by brand name "+brand, productDtos));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse("Product with brand "+ brand+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
-    }
-    @GetMapping("/all/category/brand")
-    public ResponseEntity<ApiResponse> getAllProductByCategoryAndBrand(@RequestParam String category,@RequestParam String brand){
-        try {
-            List<Product> products = productService.getProductByCategoryAndBrand(category, brand);
-            List<ProductDto> productDtos = productService.getConvertedProducts(products);
-            return ResponseEntity.ok().body(new ApiResponse("Products found by category "+category+" and brand"+brand, productDtos));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(new ApiResponse("Product with category "+ category+" and brand "+brand+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
-    }
-    @GetMapping("/name/{name}")
-    public ResponseEntity<ApiResponse> getAllProductByName(@PathVariable String name){
-        try {
-            List<Product> products = productService.getProductByName(name);
-            List<ProductDto> productDtos = productService.getConvertedProducts(products);
-            return ResponseEntity.ok().body(new ApiResponse("Product found by name "+name, productDtos));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse("Product with name "+ name+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
-    }
-    @GetMapping("/brand/{brand}/name/{name}")
-    public ResponseEntity<ApiResponse> getAllProductByBrandAndName(@PathVariable String brand,@PathVariable String name){
-        try {
-            List<Product> products = productService.getProductByBrandAndName(brand, name);
-            List<ProductDto> productDtos = productService.getConvertedProducts(products);
-            return ResponseEntity.ok().body(new ApiResponse("Product found by brand "+brand+" and name "+name, productDtos));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(new ApiResponse("Product with brand "+ brand+" and name "+name+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
-    }
-    @GetMapping("/count/brand/{brand}/name/{name}")
-    public ResponseEntity<ApiResponse> countProductByBrandAndName(@PathVariable String brand,@PathVariable String name){
-        try {
-            Long count = productService.countProductByBrandAndName(brand, name);
-            return ResponseEntity.ok().body(new ApiResponse("Count of Product", count));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(new ApiResponse("Product with brand "+ brand+" and name "+name+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("Product with ID " + id + " not found", e.getMessage()));
         }
     }
 
     @PostMapping("/add")
     @PreAuthorize("hasRole('SHOPKEEPER')")
     public ResponseEntity<ApiResponse> addProduct(@RequestBody AddProductRequest request) {
-        try {
-            productService.addProduct(request);
-            return ResponseEntity.ok().body(new ApiResponse("Product Added", null));
-        } catch (ProductAlreadyExists e) {
-            return ResponseEntity.badRequest().body(new ApiResponse("Product already exists", e.getMessage()));
-        }
+        Product product = productService.addProduct(request);
+        return ResponseEntity.ok(new ApiResponse("Product Added", productService.convertToDto(product)));
     }
-
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long id){
-        try {
-            productService.deleteProduct(id);
-            return ResponseEntity.ok().body(new ApiResponse("Product Deleted", null));
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(new ApiResponse("Product with id "+ id+" does not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok(new ApiResponse("Product Deleted", null));
     }
+
     @PutMapping("/{id}/update")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse> updateProduct(@RequestBody ProductUpdateRequest request,@PathVariable Long id){
-        try {
-            productService.updateProduct(request, id);
-            return ResponseEntity.ok().body(new ApiResponse("Product Updated", null));
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(NOT_FOUND)
-                    .body(new ApiResponse(e.getMessage(), null));        }
-
+    public ResponseEntity<ApiResponse> updateProduct(@RequestBody ProductUpdateRequest request, @PathVariable Long id) {
+        Product product = productService.updateProduct(request, id);
+        return ResponseEntity.ok(new ApiResponse("Product Updated", productService.convertToDto(product)));
     }
 
     @GetMapping("/sorted-by-price")
     public ResponseEntity<List<Product>> getSortedProducts() {
         return ResponseEntity.ok(productService.getProductsSortedByPriceAsc());
     }
-
 }
