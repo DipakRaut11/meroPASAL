@@ -25,7 +25,7 @@ public class ProductController {
     private final IProductService productService;
     private final AuthenticationService authService;
 
-    // ---------------- CUSTOMER ----------------
+
     @GetMapping("/customer/all")
     public ResponseEntity<ApiResponse> getAllProductsForCustomer() {
         List<Product> products = productService.getAllProducts();
@@ -33,7 +33,7 @@ public class ProductController {
         return ResponseEntity.ok(new ApiResponse("All products for customer", productDtos));
     }
 
-    // ---------------- SHOPKEEPER ----------------
+
     @GetMapping("/shopkeeper/all")
     @PreAuthorize("hasRole('SHOPKEEPER')")
     public ResponseEntity<ApiResponse> getAllProductsForShopkeeper() {
