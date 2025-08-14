@@ -27,4 +27,7 @@ public interface IProductService {
     ProductDto convertToDto(Product product);
 
     List<Product> getProductsSortedByPriceAsc();
+
+    List<Product> getProductsByShopkeeper(Long shopkeeperId);
+
 }
