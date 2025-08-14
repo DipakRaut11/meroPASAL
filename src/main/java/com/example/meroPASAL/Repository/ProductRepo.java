@@ -1,6 +1,7 @@
 package com.example.meroPASAL.Repository;
 
 import com.example.meroPASAL.model.Product;
+import com.example.meroPASAL.security.userModel.Shopkeeper;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -21,5 +22,15 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     List<Product> findProductByBrandAndName(String brand, String name);
 
     Long countByBrandAndName(String brand, String name);
+
+    List<Product> findByShopkeeperId(Long shopkeeperId);
+
+    boolean existsByNameAndBrandAndShopkeeper(String name, String brand, Shopkeeper shopkeeper);
+
+    List<Product> findByShopkeeper(Shopkeeper shopkeeper);
+
+
+
+
 
 }
