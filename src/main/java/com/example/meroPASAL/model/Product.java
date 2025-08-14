@@ -1,5 +1,6 @@
 package com.example.meroPASAL.model;
 
+import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -36,27 +37,27 @@ public class Product {
     private String description;
 
     @JsonIgnore
-    @ManyToOne(
-            cascade = CascadeType.ALL
-    )
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "category_id") // Foreign key mapping
     private Category category;
 
-    @OneToMany(
-            mappedBy = "product",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Image> images;
 
+    // 🔹 New field linking to Shopkeeper
+    @ManyToOne
+    @JoinColumn(name = "shopkeeper_id", nullable = false)
+    private Shopkeeper shopkeeper;
 
-    public Product(String name, String brand, BigDecimal price, int inventory, String description, Category category) {
+    public Product(String name, String brand, BigDecimal price, int inventory,
+                   String description, Category category, Shopkeeper shopkeeper) {
         this.name = name;
         this.brand = brand;
         this.price = price;
         this.inventory = inventory;
         this.description = description;
         this.category = category;
+        this.shopkeeper = shopkeeper;
     }
 }
