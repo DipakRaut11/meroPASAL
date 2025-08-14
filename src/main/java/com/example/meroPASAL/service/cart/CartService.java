@@ -14,19 +14,17 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
-public class CartService implements ICartService{
+public class CartService implements ICartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-
 
     @Override
     public Cart getCartById(Long id) {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found with id: " + id));
-        BigDecimal totalAmount =cart.getTotalAmount();
-        cart.setTotalAmount(totalAmount);
-        return cartRepository.save(cart);
+        // Optionally, calculate totalAmount here if needed
+        return cart;
     }
 
     @Transactional
@@ -36,28 +34,24 @@ public class CartService implements ICartService{
         cartItemRepository.deleteAllByCartId(id);
         cart.getItems().clear();
         cartRepository.deleteById(id);
-
     }
 
     @Override
     public BigDecimal getCartTotalPrice(Long id) {
-        Cart cart =getCartById(id);
+        Cart cart = getCartById(id);
         return cart.getTotalAmount();
     }
 
+    // Updated: always create new cart linked to user
     @Override
     public Cart initializeNewCart(User user) {
-        return Optional.ofNullable(getCartByUserId(user.getId()))
-                .orElseGet(() -> {
-                    Cart cart = new Cart();
-                    cart.setUser(user);
-                    return cartRepository.save(cart);
-                });
+        Cart cart = new Cart();
+        cart.setUser(user); // Link cart to user
+        return cartRepository.save(cart);
     }
 
     @Override
     public Cart getCartByUserId(Long userId) {
-
-            return cartRepository.findByUserId(userId);
+        return cartRepository.findByUserId(userId);
     }
 }
