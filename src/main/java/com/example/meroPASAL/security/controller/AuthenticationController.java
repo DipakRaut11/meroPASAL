@@ -9,17 +9,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.prefix}/auth")
-
 @RequiredArgsConstructor
 public class AuthenticationController {
 
@@ -28,7 +23,7 @@ public class AuthenticationController {
     @PostMapping("/signup/customer")
     public ResponseEntity<SignUpResponse> signupCustomer(@Valid @RequestBody Customer customer) {
         SignUpResponse response = authenticationService.registerCustomer(customer);
-        if (response.getMessage().equals("Email already exists")) {
+        if ("Email already exists".equals(response.getMessage())) {
             return ResponseEntity.badRequest().body(response);
         }
         return ResponseEntity.ok(response);
@@ -37,7 +32,7 @@ public class AuthenticationController {
     @PostMapping("/signup/shopkeeper")
     public ResponseEntity<SignUpResponse> signupShopkeeper(@Valid @RequestBody Shopkeeper shopkeeper) {
         SignUpResponse response = authenticationService.registerShopkeeper(shopkeeper);
-        if (response.getMessage().equals("Email already exists")) {
+        if ("Email already exists".equals(response.getMessage())) {
             return ResponseEntity.badRequest().body(response);
         }
         return ResponseEntity.ok(response);
@@ -48,11 +43,6 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.authenticate(loginRequest));
     }
 
-//    @GetMapping("/user")
-//    public ResponseEntity<?> getAuthenticatedUser(Authentication authentication) {
-//        // Return the authenticated user's details (e.g., email, roles)
-//        return ResponseEntity.ok(authenticationService.getAuthenticatedUser());
-//    }
     @GetMapping("/user")
     public ResponseEntity<?> getAuthenticatedUser() {
         try {
@@ -61,6 +51,5 @@ public class AuthenticationController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
-
     }
 }
