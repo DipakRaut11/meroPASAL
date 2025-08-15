@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,8 @@ public class OrderService implements IOrderService {
     private final ProductRepo productRepository;
     private final CartService cartService;
     private final ModelMapper modelMapper;
+
+    // ------------------- CUSTOMER -------------------
 
     @Override
     public Order placeOrder(Long userId) {
@@ -69,8 +73,7 @@ public class OrderService implements IOrderService {
 
     private BigDecimal calculateTotalAmount(List<OrderItem> orderItemList) {
         return orderItemList.stream()
-                .map(item -> item.getPrice()
-                        .multiply(new BigDecimal(item.getQuantity())))
+                .map(item -> item.getPrice().multiply(new BigDecimal(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -81,7 +84,6 @@ public class OrderService implements IOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
 
-    // New: Enforce user-specific order access here
     @Override
     public OrderDto getOrderByIdForUser(Long orderId, Long userId) {
         Order order = orderRpository.findById(orderId)
@@ -105,5 +107,60 @@ public class OrderService implements IOrderService {
     @Override
     public OrderDto convertToDto(Order order){
         return modelMapper.map(order, OrderDto.class);
+    }
+
+    // ------------------- SHOPKEEPER -------------------
+
+    @Override
+    public List<OrderDto> getOrdersByShop(Long shopId) {
+        List<Order> allOrders = orderRpository.findAll();
+
+        return allOrders.stream()
+                .map(order -> {
+                    // Keep only items for this shop
+                    var filteredItems = order.getOrderItems().stream()
+                            .filter(item -> item.getProduct().getShopkeeper().getId().equals(shopId))
+                            .collect(Collectors.toSet());
+
+                    if (filteredItems.isEmpty()) {
+                        return null; // no items for this shop, skip
+                    }
+
+                    // Create a shallow copy so we don’t mutate the original order in DB
+                    Order orderCopy = new Order();
+                    orderCopy.setOrderId(order.getOrderId());
+                    orderCopy.setUser(order.getUser());
+                    orderCopy.setOrderDate(order.getOrderDate());
+                    orderCopy.setOrderStatus(order.getOrderStatus());
+                    orderCopy.setOrderItems(filteredItems);
+
+                    // Calculate total for this shop only
+                    BigDecimal totalForShop = filteredItems.stream()
+                            .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    orderCopy.setTotalAmount(totalForShop);
+
+                    return convertToDto(orderCopy);
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+
+    @Override
+    public OrderDto updateOrderStatus(Long orderId, OderStatus status, Long shopId) {
+        Order order = orderRpository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        boolean belongsToShop = order.getOrderItems().stream()
+                .anyMatch(item -> item.getProduct().getShopkeeper().getId().equals(shopId));
+
+        if (!belongsToShop) {
+            throw new ResourceNotFoundException("This order does not belong to your shop");
+        }
+
+        order.setOrderStatus(status);
+        return convertToDto(orderRpository.save(order));
     }
 }

@@ -1,12 +1,11 @@
 package com.example.meroPASAL.controller;
 
 import com.example.meroPASAL.dto.order.OrderDto;
-import com.example.meroPASAL.exception.ResourceNotFoundException;
+import com.example.meroPASAL.enums.OderStatus;
 import com.example.meroPASAL.model.Order;
-
 import com.example.meroPASAL.response.ApiResponse;
-
 import com.example.meroPASAL.security.service.AuthenticationService;
+import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.example.meroPASAL.security.userModel.User;
 import com.example.meroPASAL.service.order.IOrderService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +23,8 @@ public class OrderController {
 
     private final IOrderService orderService;
     private final AuthenticationService authenticationService;
+
+    // ------------------- CUSTOMER -------------------
 
     @PostMapping("/order")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -46,9 +47,9 @@ public class OrderController {
             User user = authenticationService.getAuthenticatedUser();
             OrderDto order = orderService.getOrderByIdForUser(orderId, user.getId());
             return ResponseEntity.ok(new ApiResponse("Order fetched successfully", order));
-        } catch (ResourceNotFoundException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse("Sorry!!", e.getMessage()));
+                    .body(new ApiResponse("Error fetching order", e.getMessage()));
         }
     }
 
@@ -58,4 +59,33 @@ public class OrderController {
         User user = authenticationService.getAuthenticatedUser();
         return ResponseEntity.ok(orderService.getUserOrders(user.getId()));
     }
+
+    // ------------------- SHOPKEEPER -------------------
+
+    @GetMapping("/shop-orders")
+    @PreAuthorize("hasRole('SHOPKEEPER')")
+    public ResponseEntity<List<OrderDto>> getOrdersForShop() {
+        Shopkeeper shopkeeperUser = (Shopkeeper) authenticationService.getAuthenticatedUser();
+        Long shopkeeperId = shopkeeperUser.getId();
+        List<OrderDto> orders = orderService.getOrdersByShop(shopkeeperId);
+        return ResponseEntity.ok(orders);
+    }
+
+    @PutMapping("/{orderId}/status")
+    @PreAuthorize("hasRole('SHOPKEEPER')")
+    public ResponseEntity<ApiResponse> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam OderStatus status
+    ) {
+        try {
+            Shopkeeper shopkeeperUser = (Shopkeeper) authenticationService.getAuthenticatedUser();
+            Long shopkeeperId = shopkeeperUser.getId();
+            OrderDto updatedOrder = orderService.updateOrderStatus(orderId, status, shopkeeperId);
+            return ResponseEntity.ok(new ApiResponse("Order status updated", updatedOrder));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("Error updating order status", e.getMessage()));
+        }
+    }
+
 }
