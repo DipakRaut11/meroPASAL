@@ -50,6 +50,8 @@ public class AuthenticationService {
 
 
 
+
+    // Register a new Shopkeeper (with admin approval required)
     public SignUpResponse registerShopkeeper(@Valid Shopkeeper shopkeeper) {
         if (userRepository.existsByEmail(shopkeeper.getEmail())) {
             return new SignUpResponse("Email already exists");
@@ -66,14 +68,29 @@ public class AuthenticationService {
 
         shopkeeper.setPassword(passwordEncoder.encode(shopkeeper.getPassword()));
         assignDefaultRole(shopkeeper, "ROLE_SHOPKEEPER");
+
+        // Important: set approved = false initially
+        shopkeeper.setApproved(false);
+
         userRepository.save(shopkeeper);
 
-        return new SignUpResponse("Shopkeeper registered successfully");
+        return new SignUpResponse("Shopkeeper registered successfully. Waiting for admin approval.");
     }
 
 
-    // Authenticate user and generate JWT token
+
+    // Authenticate user and generate JWT token (check for shopkeeper approval)
     public HashMap<String, Object> authenticate(LoginRequest loginRequest) {
+        // Fetch user first
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // If shopkeeper, check approval status
+        if (user instanceof Shopkeeper shopkeeper && !shopkeeper.isApproved()) {
+            throw new RuntimeException("Shopkeeper not approved yet. Contact admin.");
+        }
+
+        // Continue normal authentication
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
