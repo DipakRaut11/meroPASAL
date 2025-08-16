@@ -71,9 +71,15 @@ public class ProductController {
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('SHOPKEEPER')")
     public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.ok(new ApiResponse("Product Deleted", null));
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.ok(new ApiResponse("Product Deleted", null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(e.getMessage(), null));
+        }
     }
+
 
     @PutMapping("/{id}/update")
     @PreAuthorize("hasRole('SHOPKEEPER')")

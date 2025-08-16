@@ -3,6 +3,8 @@ package com.example.meroPASAL.service.product;
 import com.example.meroPASAL.Repository.CategoryRepo;
 import com.example.meroPASAL.Repository.ImageRepos;
 import com.example.meroPASAL.Repository.ProductRepo;
+import com.example.meroPASAL.Repository.order.OrderItemRepo;
+import com.example.meroPASAL.Repository.order.OrderRepository;
 import com.example.meroPASAL.dto.ImageDto;
 import com.example.meroPASAL.dto.ProductDto;
 import com.example.meroPASAL.exception.ResourceAlreadyExistException;
@@ -33,6 +35,7 @@ public class ProductService implements IProductService {
     private final ModelMapper modelMapper;
     private final ImageRepos imageRepo;
     private final AuthenticationService authService;
+    private final OrderItemRepo orderItemRepo;
 
     // ---------------- ADD PRODUCT ----------------
     @Override
@@ -75,10 +78,20 @@ public class ProductService implements IProductService {
     // ---------------- DELETE ----------------
     @Override
     public void deleteProduct(Long id) {
-        productRepo.findById(id)
-                .ifPresentOrElse(productRepo::delete,
-                        () -> { throw new ResourceNotFoundException("Product not found with id " + id); });
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id " + id));
+
+        // Check if this product exists in any order
+        if (orderItemRepo.existsByProduct_Id(product.getId())) {
+            throw new IllegalStateException(
+                    "This product has been ordered by some customer and cannot be deleted until it is removed from orders."
+            );
+        }
+
+        productRepo.delete(product);
     }
+
+
 
     // ---------------- UPDATE ----------------
     @Override
