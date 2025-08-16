@@ -3,6 +3,8 @@ package com.example.meroPASAL.security.userModel;
 import com.example.meroPASAL.model.Cart;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +28,12 @@ public abstract class User {
 
     @Column(nullable = false)
     private String password;
+
+    @NotBlank(message = "Contact number is required")
+    @Pattern(regexp = "98\\d{8}", message = "Contact number must start with 98 and be 10 digits")
+    private String contactNumber;
+
+
     @JsonIgnore
     @OneToOne(
             mappedBy = "user",

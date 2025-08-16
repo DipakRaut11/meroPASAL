@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.Base64;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -47,10 +48,20 @@ public class AuthenticationService {
         return new SignUpResponse("Customer registered successfully");
     }
 
-    // Register a new Shopkeeper
+
+
     public SignUpResponse registerShopkeeper(@Valid Shopkeeper shopkeeper) {
         if (userRepository.existsByEmail(shopkeeper.getEmail())) {
             return new SignUpResponse("Email already exists");
+        }
+        if (userRepository.existsByPanNumber(shopkeeper.getPanNumber())) {
+            return new SignUpResponse("PAN number already exists");
+        }
+
+        // Optional: decode businessQR if coming as Base64 string
+        if (shopkeeper.getBusinessQR() != null) {
+            // Already byte[], nothing needed. If coming as Base64 string, decode here.
+            // shopkeeper.setBusinessQR(Base64.getDecoder().decode(base64String));
         }
 
         shopkeeper.setPassword(passwordEncoder.encode(shopkeeper.getPassword()));
@@ -59,6 +70,7 @@ public class AuthenticationService {
 
         return new SignUpResponse("Shopkeeper registered successfully");
     }
+
 
     // Authenticate user and generate JWT token
     public HashMap<String, Object> authenticate(LoginRequest loginRequest) {
