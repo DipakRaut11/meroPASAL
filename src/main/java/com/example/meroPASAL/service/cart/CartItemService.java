@@ -48,12 +48,20 @@ public class CartItemService implements ICartItemService {
     }
 
     @Override
-    public void removeItemFromCart(Long cartId, Long productId) {
+    public void removeItemFromCart(Long cartId, Long itemId) {
         Cart cart = cartService.getCartById(cartId);
-        CartItem itemToRemove = getCartItem(cartId, productId);
+
+        CartItem itemToRemove = cart.getItems()
+                .stream()
+                .filter(item -> item.getId().equals(itemId))  // match by CartItem.id
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found in cart"));
+
         cart.removeItem(itemToRemove);
+        cartItemRepository.delete(itemToRemove); // also delete from DB
         cartRepository.save(cart);
     }
+
 
     @Override
     public void updateCartItemQuantity(Long cartId, Long productId, int quantity) {

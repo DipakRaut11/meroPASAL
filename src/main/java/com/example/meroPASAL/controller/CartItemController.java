@@ -40,7 +40,8 @@ public class CartItemController {
     }
 
     @DeleteMapping("/cart/{cartId}/item/{itemId}/remove")
-    public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable Long cartId, @PathVariable Long itemId) {
+    public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable Long cartId,
+                                                          @PathVariable Long itemId) {
         try {
             cartItemService.removeItemFromCart(cartId, itemId);
             return ResponseEntity.ok(new ApiResponse("Item removed from cart successfully", null));
@@ -48,6 +49,7 @@ public class CartItemController {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
+
 
     @PutMapping("/cart/{cartId}/item/{itemId}/update")
     public ResponseEntity<ApiResponse> updateCartItemQuantity(@PathVariable Long cartId, @PathVariable Long itemId, @RequestParam Integer quantity) {
