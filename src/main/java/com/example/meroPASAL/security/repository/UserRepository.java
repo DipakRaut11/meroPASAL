@@ -22,14 +22,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Customer> findAllCustomers();
 
     // ✅ Fetch all shopkeepers for admin
-    @Query("SELECT s FROM Shopkeeper s")
-    List<Shopkeeper> findAllShopkeepers();
+    @Query("SELECT s FROM Shopkeeper s WHERE s.approved = true")
+    List<Shopkeeper> findAllApprovedShopkeepers();
 
     // ✅ Fetch pending shopkeepers (approved = false)
     @Query("SELECT s FROM Shopkeeper s WHERE s.approved = false")
     List<Shopkeeper> findPendingShopkeepers();
 
     List<Shopkeeper> findByApprovedFalse();
+
+
 
 
 }

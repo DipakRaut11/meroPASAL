@@ -13,19 +13,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminService {
 
-
     private final UserRepository userRepository;
 
     public List<Customer> getAllCustomers() {
         return userRepository.findAllCustomers();
     }
 
+    // Return only approved shopkeepers
     public List<Shopkeeper> getAllShopkeepers() {
-        return userRepository.findAllShopkeepers();
+        return userRepository.findAllApprovedShopkeepers();
     }
 
+    // Return pending shopkeepers
     public List<Shopkeeper> getPendingShopkeepers() {
-        return userRepository.findByApprovedFalse(); // add method in repository
+        return userRepository.findByApprovedFalse();
     }
 
     public String approveShopkeeper(Long id) {
@@ -35,6 +36,5 @@ public class AdminService {
         userRepository.save(sk);
         return "Shopkeeper approved successfully";
     }
-
-
 }
+
