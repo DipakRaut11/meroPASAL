@@ -1,6 +1,5 @@
 package com.example.meroPASAL.model;
 
-
 import com.example.meroPASAL.enums.OderStatus;
 import com.example.meroPASAL.security.userModel.User;
 import jakarta.persistence.*;
@@ -22,22 +21,37 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
+
     private LocalDate orderDate;
+
     private BigDecimal totalAmount;
+
     @Enumerated(EnumType.STRING)
     private OderStatus orderStatus;
-
 
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,
             orphanRemoval = true
-
-
     )
     private Set<OrderItem> orderItems = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private User user;
+
+    // ----------------------
+    // New fields for delivery and payment
+    // ----------------------
+    @Column(nullable = false)
+    private String dropLocation;
+
+    @Column(nullable = false)
+    private String landmark;
+
+    @Column(nullable = false)
+    private String receiverContact;
+
+    @Column(nullable = false)
+    private String paymentScreenshotUrl; // store filename or URL
 }
