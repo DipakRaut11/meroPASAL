@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,10 +29,15 @@ public class OrderController {
 
     @PostMapping("/order")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse> createOrder() {
+    public ResponseEntity<ApiResponse> createOrder(
+            @RequestParam String dropLocation,
+            @RequestParam String landmark,
+            @RequestParam("contactNumber") String receiverContact,
+            @RequestParam(required = false) MultipartFile paymentScreenshot
+    ) {
         try {
             User user = authenticationService.getAuthenticatedUser();
-            Order order = orderService.placeOrder(user.getId());
+            Order order = orderService.placeOrder(user.getId(), dropLocation, landmark, receiverContact, paymentScreenshot);
             OrderDto orderDto = orderService.convertToDto(order);
             return ResponseEntity.ok(new ApiResponse("Order Placed Successfully", orderDto));
         } catch (Exception e) {
@@ -39,6 +45,7 @@ public class OrderController {
                     .body(new ApiResponse("Error while placing order", e.getMessage()));
         }
     }
+
 
     @GetMapping("/{orderId}")
     @PreAuthorize("hasRole('CUSTOMER')")
