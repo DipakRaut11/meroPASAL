@@ -14,6 +14,8 @@ import com.example.meroPASAL.service.cart.CartService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,29 +32,46 @@ public class OrderService implements IOrderService {
     private final ProductRepo productRepository;
     private final CartService cartService;
     private final ModelMapper modelMapper;
+     private final FileStorageService fileStorageService;
+
 
     // ------------------- CUSTOMER -------------------
 
     @Override
-    public Order placeOrder(Long userId) {
-        Cart cart = cartService.getCartByUserId(userId);
+    public Order placeOrder(Long userId, String dropLocation, String landmark,
+                            String receiverContact, MultipartFile paymentScreenshot) {
 
-        Order order = createOrder(cart);
+        Cart cart = cartService.getCartByUserId(userId);
+        if (cart.getItems().isEmpty()) {
+            throw new RuntimeException("Cannot place order with empty cart");
+        }
+
+        String screenshotUrl = null;
+        if (paymentScreenshot != null && !paymentScreenshot.isEmpty()) {
+            screenshotUrl = fileStorageService.storeFile(paymentScreenshot);
+        }
+
+        Order order = createOrder(cart, dropLocation, landmark, receiverContact, screenshotUrl);
         List<OrderItem> orderItemList = createOrderItems(order, cart);
 
         order.setOrderItems(new HashSet<>(orderItemList));
         order.setTotalAmount(calculateTotalAmount(orderItemList));
         Order savedOrder = orderRpository.save(order);
-        cartService.clearCart(cart.getId());
 
+        cartService.clearCart(cart.getId());
         return savedOrder;
     }
 
-    private Order createOrder(Cart cart) {
+    private Order createOrder(Cart cart, String dropLocation, String landmark,
+                              String receiverContact, String screenshotUrl) {
         Order order = new Order();
         order.setUser(cart.getUser());
         order.setOrderStatus(OderStatus.PENDING);
         order.setOrderDate(LocalDate.now());
+        order.setDropLocation(dropLocation);
+        order.setLandmark(landmark);
+        order.setReceiverContact(receiverContact);
+        order.setPaymentScreenshotUrl(screenshotUrl);
         return order;
     }
 
@@ -63,6 +82,7 @@ public class OrderService implements IOrderService {
                     Product product = cartItem.getProduct();
                     product.setInventory(product.getInventory() - cartItem.getQuantity());
                     productRepository.save(product);
+
                     return new OrderItem(
                             order,
                             product,

@@ -5,12 +5,14 @@ package com.example.meroPASAL.service.order;
 import com.example.meroPASAL.dto.order.OrderDto;
 import com.example.meroPASAL.enums.OderStatus;
 import com.example.meroPASAL.model.Order;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface IOrderService {
 
-    Order placeOrder(Long userId);
+    Order placeOrder(Long userId, String dropLocation, String landmark,
+                     String receiverContact, MultipartFile paymentScreenshot);
     OrderDto getOrderById(Long orderId);
 
     List<OrderDto> getUserOrders(Long userId);
