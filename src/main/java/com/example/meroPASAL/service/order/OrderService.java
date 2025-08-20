@@ -4,7 +4,9 @@ import com.example.meroPASAL.Repository.ProductRepo;
 import com.example.meroPASAL.Repository.order.OrderRepository;
 import com.example.meroPASAL.dto.order.OrderDto;
 import com.example.meroPASAL.dto.order.OrderItemDto;
+import com.example.meroPASAL.dto.order.OrderSummaryDto;
 import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.enums.PaymentStatus;
 import com.example.meroPASAL.exception.ResourceNotFoundException;
 import com.example.meroPASAL.model.Cart;
 import com.example.meroPASAL.model.Order;
@@ -210,4 +212,57 @@ public class OrderService implements IOrderService {
         order.setOrderStatus(status);
         return convertToDto(orderRpository.save(order));
     }
+
+
+    public OrderSummaryDto convertToSummaryDto(Order order) {
+        OrderSummaryDto dto = new OrderSummaryDto();
+        dto.setId(order.getOrderId());
+        dto.setUserId(order.getUser().getId());
+        dto.setOrderDate(order.getOrderDate());
+        dto.setOrderStatus(order.getOrderStatus());
+        dto.setPaymentScreenshotUrl(order.getPaymentScreenshotUrl());
+        dto.setPaymentStatus(order.getPaymentStatus()); // ✅ add this
+
+        // Map items
+        List<OrderItemDto> itemDtos = order.getOrderItems().stream()
+                .map(item -> new OrderItemDto(
+                        item.getProduct().getId(),
+                        item.getProduct().getName(),
+                        item.getProduct().getBrand(),
+                        item.getQuantity(),
+                        item.getPrice()
+                ))
+                .toList();
+
+        dto.setItems(itemDtos);
+
+        // Calculate total
+        BigDecimal total = itemDtos.stream()
+                .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        dto.setTotalAmount(total);
+
+        return dto;
+    }
+
+
+
+    public OrderSummaryDto updatePaymentStatus(Long orderId, PaymentStatus status) {
+        Order order = orderRpository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        order.setPaymentStatus(status);
+        Order savedOrder = orderRpository.save(order);
+        return convertToSummaryDto(savedOrder);
+    }
+
+
+    @Override
+    public List<OrderSummaryDto> getAllOrders() {
+        return orderRpository.findAll().stream()
+                .map(this::convertToSummaryDto)
+                .collect(Collectors.toList()); // mutable list
+    }
+
+
 }
