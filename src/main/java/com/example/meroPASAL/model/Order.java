@@ -1,6 +1,7 @@
 package com.example.meroPASAL.model;
 
 import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.enums.PaymentStatus;
 import com.example.meroPASAL.security.userModel.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -28,6 +29,10 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private OderStatus orderStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
 
     @OneToMany(
             mappedBy = "order",
