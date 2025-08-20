@@ -3,7 +3,9 @@ package com.example.meroPASAL.service.order;
 
 
 import com.example.meroPASAL.dto.order.OrderDto;
+import com.example.meroPASAL.dto.order.OrderSummaryDto;
 import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.enums.PaymentStatus;
 import com.example.meroPASAL.model.Order;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,4 +26,7 @@ public interface IOrderService {
 
     List<OrderDto> getOrdersByShop(Long shopId);
     OrderDto updateOrderStatus(Long orderId, OderStatus status, Long shopId);
+
+    List<OrderSummaryDto> getAllOrders();
+    OrderSummaryDto updatePaymentStatus(Long orderId, PaymentStatus status);
 }
