@@ -3,9 +3,15 @@ package com.example.meroPASAL.security.controller;
 import com.example.meroPASAL.security.service.AdminService;
 import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
+import org.springframework.core.io.Resource;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -32,6 +38,16 @@ public class AdminController {
     @PostMapping("/approve-shopkeeper/{id}")
     public String approveShopkeeper(@PathVariable Long id) {
         return adminService.approveShopkeeper(id);
+    }
+
+    @GetMapping("/qr")
+    public ResponseEntity<Resource> getAdminQr() {
+        // Assume the QR is stored as a file
+        Path qrPath = Paths.get("uploads/businessQR.jpg");
+        Resource file = new FileSystemResource(qrPath);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(file);
     }
 
 }
