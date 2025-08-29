@@ -1,7 +1,9 @@
 package com.example.meroPASAL.controller;
 
 import com.example.meroPASAL.dto.order.OrderDto;
+import com.example.meroPASAL.dto.order.OrderSummaryDto;
 import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.enums.PaymentStatus;
 import com.example.meroPASAL.model.Order;
 import com.example.meroPASAL.response.ApiResponse;
 import com.example.meroPASAL.security.service.AuthenticationService;
@@ -94,5 +96,36 @@ public class OrderController {
                     .body(new ApiResponse("Error updating order status", e.getMessage()));
         }
     }
+
+    // ------------------- ADMIN -------------------
+
+
+    @PutMapping("/{orderId}/payment-status")
+    //@PreAuthorize("hasRole('ADMIN')") // or CUSTOMER if allowed
+    public ResponseEntity<ApiResponse> updatePaymentStatus(
+            @PathVariable Long orderId,
+            @RequestParam PaymentStatus paymentStatus) {
+        try {
+            OrderSummaryDto updatedOrder = orderService.updatePaymentStatus(orderId, paymentStatus);
+            return ResponseEntity.ok(new ApiResponse("Payment status updated", updatedOrder));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("Error updating payment status", e.getMessage()));
+        }
+    }
+
+
+    @GetMapping("/all")
+// @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderSummaryDto>> getAllOrders() {
+        List<OrderSummaryDto> orders = orderService.getAllOrders();
+
+        // Optional: sort by order date or any other criteria if needed
+        orders.sort((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate())); // newest first
+
+        return ResponseEntity.ok(orders);
+    }
+
+
 
 }

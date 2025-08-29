@@ -18,6 +18,7 @@ import com.example.meroPASAL.request.product.AddProductRequest;
 import com.example.meroPASAL.request.product.ProductUpdateRequest;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -116,7 +117,7 @@ public class ProductService implements IProductService {
     // ---------------- CUSTOMER ----------------
     @Override
     public List<Product> getAllProducts() {
-        return productRepo.findAll();
+        return productRepo.findAll(Sort.by(Sort.Direction.ASC, "price"));
     }
 
     // ---------------- SHOPKEEPER ----------------
