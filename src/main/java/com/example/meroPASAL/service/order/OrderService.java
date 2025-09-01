@@ -69,6 +69,7 @@ public class OrderService implements IOrderService {
         Order order = new Order();
         order.setUser(cart.getUser());
         order.setOrderStatus(OderStatus.PENDING);
+        order.setPaymentStatus(PaymentStatus.UNPAID);
         order.setOrderDate(LocalDate.now());
         order.setDropLocation(dropLocation);
         order.setLandmark(landmark);
@@ -175,22 +176,35 @@ public class OrderService implements IOrderService {
                         return null; // no items for this shop, skip
                     }
 
-                    // Create a shallow copy so we don’t mutate the original order in DB
-                    Order orderCopy = new Order();
-                    orderCopy.setOrderId(order.getOrderId());
-                    orderCopy.setUser(order.getUser());
-                    orderCopy.setOrderDate(order.getOrderDate());
-                    orderCopy.setOrderStatus(order.getOrderStatus());
-                    orderCopy.setOrderItems(filteredItems);
+                    // Create OrderDto with payment status
+                    OrderDto dto = new OrderDto();
+                    dto.setId(order.getOrderId());
+                    dto.setUserId(order.getUser().getId());
+                    dto.setOrderDate(order.getOrderDate());
+                    dto.setOrderStatus(order.getOrderStatus());
+                    dto.setPaymentStatus(order.getPaymentStatus()); // Add this line
+
+                    // Map order items
+                    List<OrderItemDto> itemDtos = filteredItems.stream()
+                            .map(item -> new OrderItemDto(
+                                    item.getProduct().getId(),
+                                    item.getProduct().getName(),
+                                    item.getProduct().getBrand(),
+                                    item.getQuantity(),
+                                    item.getPrice()
+                            ))
+                            .toList();
+
+                    dto.setItems(itemDtos);
 
                     // Calculate total for this shop only
                     BigDecimal totalForShop = filteredItems.stream()
                             .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                    orderCopy.setTotalAmount(totalForShop);
+                    dto.setTotalAmount(totalForShop);
 
-                    return convertToDto(orderCopy);
+                    return dto;
                 })
                 .filter(Objects::nonNull)
                 .toList();
