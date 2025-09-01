@@ -101,7 +101,7 @@ public class OrderController {
 
 
     @PutMapping("/{orderId}/payment-status")
-    //@PreAuthorize("hasRole('ADMIN')") // or CUSTOMER if allowed
+    @PreAuthorize("hasRole('ADMIN')") // or CUSTOMER if allowed
     public ResponseEntity<ApiResponse> updatePaymentStatus(
             @PathVariable Long orderId,
             @RequestParam PaymentStatus paymentStatus) {
@@ -116,7 +116,7 @@ public class OrderController {
 
 
     @GetMapping("/all")
-// @PreAuthorize("hasRole('ADMIN')")
+     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderSummaryDto>> getAllOrders() {
         List<OrderSummaryDto> orders = orderService.getAllOrders();
 
