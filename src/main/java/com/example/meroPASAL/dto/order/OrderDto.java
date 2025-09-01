@@ -2,6 +2,7 @@ package com.example.meroPASAL.dto.order;
 
 
 import com.example.meroPASAL.enums.OderStatus;
+import com.example.meroPASAL.enums.PaymentStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -15,5 +16,6 @@ public class OrderDto {
     private LocalDate orderDate;
     private BigDecimal totalAmount;
     private OderStatus orderStatus;
+    private PaymentStatus paymentStatus;
     private List<OrderItemDto> items;
 }
