@@ -3,6 +3,7 @@ package com.example.meroPASAL.service.product;
 import com.example.meroPASAL.Repository.CategoryRepo;
 import com.example.meroPASAL.Repository.ImageRepos;
 import com.example.meroPASAL.Repository.ProductRepo;
+import com.example.meroPASAL.Repository.SearchHistoryRepo;
 import com.example.meroPASAL.Repository.order.OrderItemRepo;
 import com.example.meroPASAL.Repository.order.OrderRepository;
 import com.example.meroPASAL.dto.ImageDto;
@@ -12,7 +13,9 @@ import com.example.meroPASAL.exception.ResourceNotFoundException;
 import com.example.meroPASAL.model.Category;
 import com.example.meroPASAL.model.Image;
 import com.example.meroPASAL.model.Product;
+import com.example.meroPASAL.model.SearchHistory;
 import com.example.meroPASAL.security.service.AuthenticationService;
+import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.example.meroPASAL.request.product.AddProductRequest;
 import com.example.meroPASAL.request.product.ProductUpdateRequest;
@@ -37,6 +40,7 @@ public class ProductService implements IProductService {
     private final ImageRepos imageRepo;
     private final AuthenticationService authService;
     private final OrderItemRepo orderItemRepo;
+    private final SearchHistoryRepo searchHistoryRepo;
 
     // ---------------- ADD PRODUCT ----------------
     @Override
@@ -117,8 +121,52 @@ public class ProductService implements IProductService {
     // ---------------- CUSTOMER ----------------
     @Override
     public List<Product> getAllProducts() {
-        return productRepo.findAll(Sort.by(Sort.Direction.ASC, "price"));
+        Customer customer = null;
+        try {
+            var user = authService.getAuthenticatedUser();
+            if (user instanceof Customer c) {
+                customer = c;
+            }
+        } catch (RuntimeException e) {
+            // user not found → anonymous / not logged in
+        }
+
+        List<Product> allProducts = productRepo.findAll(Sort.by(Sort.Direction.ASC, "price"));
+
+        if (customer == null) {
+            return allProducts; // first-time / anonymous user
+        }
+
+        Optional<SearchHistory> lastSearchOpt = searchHistoryRepo.findTopByCustomerOrderByIdDesc(customer);
+
+        if (lastSearchOpt.isEmpty()) {
+            return allProducts; // first-time logged-in customer
+        }
+
+        SearchHistory lastSearch = lastSearchOpt.get();
+        String type = lastSearch.getSearchType();
+        String value = lastSearch.getSearchValue().toLowerCase();
+
+        List<Product> prioritized = new ArrayList<>();
+        List<Product> others = new ArrayList<>();
+
+        for (Product p : allProducts) {
+            boolean matches = switch (type) {
+                case "brand" -> p.getBrand() != null && p.getBrand().toLowerCase().contains(value);
+                case "category" -> p.getCategory() != null
+                        && p.getCategory().getName() != null
+                        && p.getCategory().getName().toLowerCase().contains(value);
+                case "name" -> p.getName() != null && p.getName().toLowerCase().contains(value);
+                default -> false;
+            };
+            if (matches) prioritized.add(p);
+            else others.add(p);
+        }
+
+        prioritized.addAll(others);
+        return prioritized;
     }
+
 
     // ---------------- SHOPKEEPER ----------------
     @Override
@@ -129,21 +177,31 @@ public class ProductService implements IProductService {
     // ---------------- FILTER ----------------
     @Override
     public List<Product> getProductsByCategory(String category) {
+        Customer customer = (Customer) authService.getAuthenticatedUser();
+        SearchHistory history = new SearchHistory("category", category, customer);
+        searchHistoryRepo.save(history);
         return productRepo.findByCategory_Name(category);
     }
 
     @Override
     public List<Product> getProductByBrand(String brand) {
+        Customer customer = (Customer) authService.getAuthenticatedUser();
+        SearchHistory history = new SearchHistory("brand", brand, customer);
+        searchHistoryRepo.save(history);
         return productRepo.findByBrand(brand);
     }
 
     @Override
     public List<Product> getProductByCategoryAndBrand(String category, String brand) {
+
         return productRepo.findProductByBrandAndCategory_Name(brand, category);
     }
 
     @Override
     public List<Product> getProductByName(String name) {
+        Customer customer = (Customer) authService.getAuthenticatedUser();
+        SearchHistory history = new SearchHistory("name", name, customer);
+        searchHistoryRepo.save(history);
         return productRepo.findProductByName(name);
     }
 
