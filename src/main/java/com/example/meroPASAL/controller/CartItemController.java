@@ -17,7 +17,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("${api.prefix}/cartItem")
-@PreAuthorize("hasRole('CUSTOMER')")
+@PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+
 public class CartItemController {
 
     private final ICartItemService cartItemService;
