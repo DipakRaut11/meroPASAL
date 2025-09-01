@@ -55,7 +55,7 @@ public class ImageController {
         return iImageService.downloadImage(imageId);
     }
 
-    @PutMapping("/image/{imageId}/update")
+    @PutMapping("/{imageId}/update")
     public ResponseEntity<ApiResponse> updateImage(@PathVariable Long imageId, @RequestParam MultipartFile file) {
         try {
             Image image = iImageService.getImageById(imageId);
@@ -73,7 +73,7 @@ public class ImageController {
 
 
     }
-    @DeleteMapping("/image/{imageId}/delete")
+    @DeleteMapping("/{imageId}/delete")
     public ResponseEntity<ApiResponse> deleteImage(@PathVariable Long imageId) {
         try {
             Image image = iImageService.getImageById(imageId);
