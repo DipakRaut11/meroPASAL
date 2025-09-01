@@ -15,7 +15,8 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("${api.prefix}/cart")
-@PreAuthorize("hasAnyRole('CUSTOMER', 'SHOPKEEPER')")
+@PreAuthorize("hasAnyRole('CUSTOMER', 'SHOPKEEPER', 'ADMIN')")
+
 
 public class CartController {
 
