@@ -31,6 +31,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<Shopkeeper> findByApprovedFalse();
 
+    @Query("SELECT a FROM Admin a WHERE a.email = :email")
+    Optional<User> findAdminByEmail(@Param("email") String email);
+
+
 
 
 
