@@ -3,6 +3,7 @@ package com.example.meroPASAL.security.controller;
 import com.example.meroPASAL.security.dto.LoginRequest;
 import com.example.meroPASAL.security.response.SignUpResponse;
 import com.example.meroPASAL.security.service.AuthenticationService;
+import com.example.meroPASAL.security.userModel.Admin;
 import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
 import jakarta.validation.Valid;
@@ -78,13 +79,19 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.authenticate(loginRequest));
     }
 
-    @GetMapping("/user")
-    public ResponseEntity<?> getAuthenticatedUser() {
-        try {
-            HashMap<String, Object> response = authenticationService.getAuthenticatedUserDetails();
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    @PostMapping("/signup/admin")
+    public ResponseEntity<SignUpResponse> signupAdmin(@Valid @RequestBody Admin admin) {
+        SignUpResponse response = authenticationService.registerAdmin(admin);
+        if ("Email already exists".equals(response.getMessage())) {
+            return ResponseEntity.badRequest().body(response);
         }
+        return ResponseEntity.ok(response);
     }
+//    @PostMapping("/login/admin")
+//    public ResponseEntity<HashMap<String, Object>> loginAdmin(@RequestBody LoginRequest loginRequest) {
+//        return ResponseEntity.ok(authenticationService.authenticateAdmin(loginRequest));
+//    }
+
+
+
 }
