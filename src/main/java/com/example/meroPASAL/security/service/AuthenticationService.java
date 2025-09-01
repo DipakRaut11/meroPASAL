@@ -5,10 +5,7 @@ import com.example.meroPASAL.security.jwt.JwtUtils;
 import com.example.meroPASAL.security.repository.RoleRepository;
 import com.example.meroPASAL.security.repository.UserRepository;
 import com.example.meroPASAL.security.response.SignUpResponse;
-import com.example.meroPASAL.security.userModel.Customer;
-import com.example.meroPASAL.security.userModel.Role;
-import com.example.meroPASAL.security.userModel.Shopkeeper;
-import com.example.meroPASAL.security.userModel.User;
+import com.example.meroPASAL.security.userModel.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.Base64;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -34,6 +30,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+
 
     // Register a new Customer
     public SignUpResponse registerCustomer(@Valid Customer customer) {
@@ -152,4 +149,47 @@ public class AuthenticationService {
 
         return response;
     }
+
+
+    // Register a new Admin
+    public SignUpResponse registerAdmin(@Valid Admin admin) {
+        if (userRepository.existsByEmail(admin.getEmail())) {
+            return new SignUpResponse("Email already exists");
+        }
+
+        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
+        assignDefaultRole(admin, "ROLE_ADMIN");
+        userRepository.save(admin); // ✅ save in adminRepository
+
+        return new SignUpResponse("Admin registered successfully");
+    }
+
+
+    public HashMap<String, Object> authenticateAdmin(LoginRequest loginRequest) {
+        User user = userRepository.findAdminByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        // Already guaranteed to be Admin, no instanceof check needed
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String jwt = jwtUtils.generateTokenForUser(authentication);
+
+        HashMap<String, Object> response = new HashMap<>();
+        response.put("token", jwt);
+        response.put("email", userDetails.getUsername());
+        response.put("roles", Set.of("ROLE_ADMIN"));
+
+        return response;
+    }
+
+
 }
