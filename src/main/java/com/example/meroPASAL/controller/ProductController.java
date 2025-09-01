@@ -1,10 +1,14 @@
 package com.example.meroPASAL.controller;
 
+import com.example.meroPASAL.Repository.SearchHistoryRepo;
 import com.example.meroPASAL.dto.ProductDto;
+import com.example.meroPASAL.dto.SaveSearchRequest;
 import com.example.meroPASAL.exception.ResourceNotFoundException;
 import com.example.meroPASAL.model.Product;
+import com.example.meroPASAL.model.SearchHistory;
 import com.example.meroPASAL.response.ApiResponse;
 import com.example.meroPASAL.security.service.AuthenticationService;
+import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.example.meroPASAL.service.product.IProductService;
 import com.example.meroPASAL.request.product.AddProductRequest;
@@ -24,14 +28,42 @@ public class ProductController {
 
     private final IProductService productService;
     private final AuthenticationService authService;
+    private final SearchHistoryRepo searchHistoryRepo;
 
 
+ @GetMapping("/all")
+ public ResponseEntity<ApiResponse> getAllProducts() {
+     List<Product> products = productService.getAllProducts();
+     List<ProductDto> productDtos = productService.getConvertedProducts(products);
+     return ResponseEntity.ok(new ApiResponse("All products for customer", productDtos));
+ }
+       @PreAuthorize("hasRole('CUSTOMER')")
     @GetMapping("/customer/all")
     public ResponseEntity<ApiResponse> getAllProductsForCustomer() {
         List<Product> products = productService.getAllProducts();
         List<ProductDto> productDtos = productService.getConvertedProducts(products);
         return ResponseEntity.ok(new ApiResponse("All products for customer", productDtos));
     }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PostMapping("/save")
+    public ResponseEntity<String> saveSearch(@RequestBody SaveSearchRequest request) {
+        var user = authService.getAuthenticatedUser();
+        if (!(user instanceof Customer customer)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Only customers can save search history");
+        }
+
+        SearchHistory history = new SearchHistory(
+                request.getSearchType(),
+                request.getSearchValue(),
+                customer
+        );
+        searchHistoryRepo.save(history);
+
+        return ResponseEntity.ok("Search history saved successfully");
+    }
+
 
 
     @GetMapping("/shopkeeper/all")
