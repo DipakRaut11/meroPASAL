@@ -211,21 +211,30 @@ public class OrderService implements IOrderService {
     }
 
 
+//    @Override
+//    public OrderDto updateOrderStatus(Long orderId, OderStatus status, Long shopId) {
+//        Order order = orderRpository.findById(orderId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+//
+//        boolean belongsToShop = order.getOrderItems().stream()
+//                .anyMatch(item -> item.getProduct().getShopkeeper().getId().equals(shopId));
+//
+//        if (!belongsToShop) {
+//            throw new ResourceNotFoundException("This order does not belong to your shop");
+//        }
+//
+//        order.setOrderStatus(status);
+//        return convertToDto(orderRpository.save(order));
+//    }
+
     @Override
-    public OrderDto updateOrderStatus(Long orderId, OderStatus status, Long shopId) {
+    public OrderDto updateOrderStatusByAdmin(Long orderId, OderStatus status) {
         Order order = orderRpository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
-        boolean belongsToShop = order.getOrderItems().stream()
-                .anyMatch(item -> item.getProduct().getShopkeeper().getId().equals(shopId));
-
-        if (!belongsToShop) {
-            throw new ResourceNotFoundException("This order does not belong to your shop");
-        }
-
         order.setOrderStatus(status);
         return convertToDto(orderRpository.save(order));
     }
+
 
 
     public OrderSummaryDto convertToSummaryDto(Order order) {
@@ -277,6 +286,35 @@ public class OrderService implements IOrderService {
                 .map(this::convertToSummaryDto)
                 .collect(Collectors.toList()); // mutable list
     }
+
+
+    //for esewa
+
+    @Override
+    public Order createPendingOrder(Long userId, String dropLocation, String landmark, String receiverContact) {
+        Cart cart = cartService.getCartByUserId(userId);
+        if (cart.getItems().isEmpty()) {
+            throw new RuntimeException("Cannot place order with empty cart");
+        }
+
+        Order order = new Order();
+        order.setUser(cart.getUser());
+        order.setOrderDate(LocalDate.now());
+        order.setDropLocation(dropLocation);
+        order.setLandmark(landmark);
+        order.setReceiverContact(receiverContact);
+        order.setPaymentStatus(PaymentStatus.UNPAID);
+        order.setOrderStatus(OderStatus.PENDING);
+
+        // Convert cart items to order items
+        List<OrderItem> orderItemList = createOrderItems(order, cart);
+        order.setOrderItems(new HashSet<>(orderItemList));
+        order.setTotalAmount(calculateTotalAmount(orderItemList));
+
+        return orderRpository.save(order);
+    }
+
+
 
 
 }

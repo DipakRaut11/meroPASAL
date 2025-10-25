@@ -76,8 +76,16 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<HashMap<String, Object>> login(@RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(authenticationService.authenticate(loginRequest));
+        try {
+            return ResponseEntity.ok(authenticationService.authenticate(loginRequest));
+        } catch (RuntimeException e) {
+            HashMap<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
     }
+
 
     @PostMapping("/signup/admin")
     public ResponseEntity<SignUpResponse> signupAdmin(@Valid @RequestBody Admin admin) {
@@ -87,10 +95,7 @@ public class AuthenticationController {
         }
         return ResponseEntity.ok(response);
     }
-//    @PostMapping("/login/admin")
-//    public ResponseEntity<HashMap<String, Object>> loginAdmin(@RequestBody LoginRequest loginRequest) {
-//        return ResponseEntity.ok(authenticationService.authenticateAdmin(loginRequest));
-//    }
+
 
 
 

@@ -21,13 +21,11 @@ import com.example.meroPASAL.request.product.AddProductRequest;
 import com.example.meroPASAL.request.product.ProductUpdateRequest;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,7 +117,8 @@ public class ProductService implements IProductService {
     }
 
     // ---------------- CUSTOMER ----------------
-    @Override
+
+        @Override
     public List<Product> getAllProducts() {
         Customer customer = null;
         try {
@@ -128,44 +127,83 @@ public class ProductService implements IProductService {
                 customer = c;
             }
         } catch (RuntimeException e) {
-            // user not found → anonymous / not logged in
+            // user not logged in
         }
 
-        List<Product> allProducts = productRepo.findAll(Sort.by(Sort.Direction.ASC, "price"));
+        // ❌ remove price sorting here
+        List<Product> allProducts = productRepo.findAll();
 
         if (customer == null) {
-            return allProducts; // first-time / anonymous user
+            // anonymous user → just show by price
+            return allProducts.stream()
+                    .sorted(Comparator.comparing(Product::getPrice))
+                    .toList();
         }
 
-        Optional<SearchHistory> lastSearchOpt = searchHistoryRepo.findTopByCustomerOrderByIdDesc(customer);
+        List<SearchHistory> recentSearches = searchHistoryRepo
+                .findByCustomerOrderByIdDesc(customer, PageRequest.of(0, 5))
+                .getContent();
 
-        if (lastSearchOpt.isEmpty()) {
-            return allProducts; // first-time logged-in customer
+        if (recentSearches.isEmpty()) {
+            return allProducts.stream()
+                    .sorted(Comparator.comparing(Product::getPrice))
+                    .toList();
         }
 
-        SearchHistory lastSearch = lastSearchOpt.get();
-        String type = lastSearch.getSearchType();
-        String value = lastSearch.getSearchValue().toLowerCase();
+        Set<String> searchBrands = new HashSet<>();
+        Set<String> searchCategories = new HashSet<>();
+        Set<String> searchNames = new HashSet<>();
+
+        for (SearchHistory sh : recentSearches) {
+            String value = sh.getSearchValue().toLowerCase();
+            switch (sh.getSearchType()) {
+                case "brand" -> searchBrands.add(value);
+                case "category" -> searchCategories.add(value);
+                case "name" -> searchNames.add(value);
+            }
+        }
 
         List<Product> prioritized = new ArrayList<>();
         List<Product> others = new ArrayList<>();
 
         for (Product p : allProducts) {
-            boolean matches = switch (type) {
-                case "brand" -> p.getBrand() != null && p.getBrand().toLowerCase().contains(value);
-                case "category" -> p.getCategory() != null
-                        && p.getCategory().getName() != null
-                        && p.getCategory().getName().toLowerCase().contains(value);
-                case "name" -> p.getName() != null && p.getName().toLowerCase().contains(value);
-                default -> false;
-            };
+            boolean matches = false;
+
+            if (p.getBrand() != null &&
+                    searchBrands.stream().anyMatch(b -> p.getBrand().toLowerCase().contains(b))) {
+                matches = true;
+            } else if (p.getCategory() != null && p.getCategory().getName() != null &&
+                    searchCategories.stream().anyMatch(c -> p.getCategory().getName().toLowerCase().contains(c))) {
+                matches = true;
+            } else if (p.getName() != null &&
+                    searchNames.stream().anyMatch(n -> p.getName().toLowerCase().contains(n))) {
+                matches = true;
+            }
+
             if (matches) prioritized.add(p);
             else others.add(p);
         }
 
+        // ✅ Sort each group by price separately
+        prioritized.sort(Comparator.comparing(Product::getPrice));
+        others.sort(Comparator.comparing(Product::getPrice));
+
+        // Merge: prioritized first
         prioritized.addAll(others);
         return prioritized;
     }
+
+
+    // helper class
+    private static class ScoredProduct {
+        Product product;
+        int score;
+        ScoredProduct(Product p, int s) {
+            this.product = p;
+            this.score = s;
+        }
+    }
+
 
 
     // ---------------- SHOPKEEPER ----------------

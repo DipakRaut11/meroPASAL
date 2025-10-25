@@ -1,16 +1,20 @@
 package com.example.meroPASAL.controller;
 
 import com.example.meroPASAL.dto.order.OrderDto;
+import com.example.meroPASAL.dto.order.OrderRequestDto;
 import com.example.meroPASAL.dto.order.OrderSummaryDto;
 import com.example.meroPASAL.enums.OderStatus;
 import com.example.meroPASAL.enums.PaymentStatus;
 import com.example.meroPASAL.model.Order;
+import com.example.meroPASAL.model.Payment;
 import com.example.meroPASAL.response.ApiResponse;
 import com.example.meroPASAL.security.service.AuthenticationService;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.example.meroPASAL.security.userModel.User;
 import com.example.meroPASAL.service.order.IOrderService;
+import com.example.meroPASAL.service.order.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,27 +30,35 @@ public class OrderController {
 
     private final IOrderService orderService;
     private final AuthenticationService authenticationService;
+    private final PaymentService paymentService;
+
+    @Value("${esewa.sandbox.url}")
+    private String esewaSandboxUrl;
 
     // ------------------- CUSTOMER -------------------
 
+//    @PostMapping("/order")
+//    @PreAuthorize("hasRole('CUSTOMER')")
+//    public ResponseEntity<ApiResponse> createOrder(@RequestParam(defaultValue = "100") double amount) throws Exception{
+//
+//    Payment payment = paymentService.preparePayment(amount);
+//        return ResponseEntity.ok(new ApiResponse("eSewa payment details generated", payment));
+//
+//
+//    }
+
     @PostMapping("/order")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse> createOrder(
-            @RequestParam String dropLocation,
-            @RequestParam String landmark,
-            @RequestParam("contactNumber") String receiverContact,
-            @RequestParam(required = false) MultipartFile paymentScreenshot
-    ) {
-        try {
-            User user = authenticationService.getAuthenticatedUser();
-            Order order = orderService.placeOrder(user.getId(), dropLocation, landmark, receiverContact, paymentScreenshot);
-            OrderDto orderDto = orderService.convertToDto(order);
-            return ResponseEntity.ok(new ApiResponse("Order Placed Successfully", orderDto));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse("Error while placing order", e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse> createOrder(@RequestBody OrderRequestDto orderRequest) throws Exception {
+        Payment payment = paymentService.preparePayment(
+                orderRequest.getAmount(),
+                orderRequest.getDropLocation(),
+                orderRequest.getLandmark(),
+                orderRequest.getReceiverContact()
+        );
+        return ResponseEntity.ok(new ApiResponse("eSewa payment details generated", payment));
     }
+
 
 
     @GetMapping("/{orderId}")
@@ -79,25 +91,42 @@ public class OrderController {
         List<OrderDto> orders = orderService.getOrdersByShop(shopkeeperId);
         return ResponseEntity.ok(orders);
     }
+//
+//    @PutMapping("/{orderId}/status")
+//    @PreAuthorize("hasRole('SHOPKEEPER')")
+//    public ResponseEntity<ApiResponse> updateOrderStatus(
+//            @PathVariable Long orderId,
+//            @RequestParam OderStatus status
+//    ) {
+//        try {
+//            Shopkeeper shopkeeperUser = (Shopkeeper) authenticationService.getAuthenticatedUser();
+//            Long shopkeeperId = shopkeeperUser.getId();
+//            OrderDto updatedOrder = orderService.updateOrderStatus(orderId, status, shopkeeperId);
+//            return ResponseEntity.ok(new ApiResponse("Order status updated", updatedOrder));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(new ApiResponse("Error updating order status", e.getMessage()));
+//        }
+//    }
+
+    // ------------------- ADMIN -------------------
+
 
     @PutMapping("/{orderId}/status")
-    @PreAuthorize("hasRole('SHOPKEEPER')")
+    @PreAuthorize("hasRole('ADMIN')")   // ✅ Only ADMIN can update order status now
     public ResponseEntity<ApiResponse> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam OderStatus status
     ) {
         try {
-            Shopkeeper shopkeeperUser = (Shopkeeper) authenticationService.getAuthenticatedUser();
-            Long shopkeeperId = shopkeeperUser.getId();
-            OrderDto updatedOrder = orderService.updateOrderStatus(orderId, status, shopkeeperId);
+            // No longer tied to a shopkeeper
+            OrderDto updatedOrder = orderService.updateOrderStatusByAdmin(orderId, status);
             return ResponseEntity.ok(new ApiResponse("Order status updated", updatedOrder));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("Error updating order status", e.getMessage()));
         }
     }
-
-    // ------------------- ADMIN -------------------
 
 
     @PutMapping("/{orderId}/payment-status")

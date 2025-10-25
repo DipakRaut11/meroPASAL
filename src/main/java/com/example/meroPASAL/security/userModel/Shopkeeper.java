@@ -7,6 +7,7 @@ import jakarta.persistence.Lob;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Getter
@@ -14,6 +15,7 @@ import lombok.Setter;
 public class Shopkeeper extends User {
     private String shopName;
     private String address;
+    @Pattern(regexp = "^\\d{9}$", message = "PAN must be exactly 9 digits (numbers only).")
     private String panNumber;
 
 

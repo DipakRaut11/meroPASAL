@@ -25,8 +25,11 @@ public interface IOrderService {
     OrderDto getOrderByIdForUser(Long orderId, Long userId);
 
     List<OrderDto> getOrdersByShop(Long shopId);
-    OrderDto updateOrderStatus(Long orderId, OderStatus status, Long shopId);
+   // OrderDto updateOrderStatus(Long orderId, OderStatus status, Long shopId);
+   OrderDto updateOrderStatusByAdmin(Long orderId, OderStatus status);
 
     List<OrderSummaryDto> getAllOrders();
     OrderSummaryDto updatePaymentStatus(Long orderId, PaymentStatus status);
+
+    Order createPendingOrder(Long userId, String dropLocation, String landmark, String receiverContact);
 }
