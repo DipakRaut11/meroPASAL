@@ -1,5 +1,6 @@
 package com.example.meroPASAL.controller;
 
+import com.example.meroPASAL.dto.order.EsewaResponseDto;
 import com.example.meroPASAL.dto.order.OrderDto;
 import com.example.meroPASAL.dto.order.OrderRequestDto;
 import com.example.meroPASAL.dto.order.OrderSummaryDto;
@@ -155,6 +156,33 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @PostMapping("/esewa-success")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse> handleEsewaSuccess(@RequestBody EsewaResponseDto dto) {
+        try {
+            User user = authenticationService.getAuthenticatedUser();
+
+            // Create the order from cart
+            Order order = orderService.createPendingOrder(
+                    user.getId(),
+                    dto.getDropLocation(),
+                    dto.getLandmark(),
+                    dto.getReceiverContact()
+            );
+
+            // Mark payment as PAID (sandbox/testing)
+            orderService.updatePaymentStatus(order.getOrderId(), PaymentStatus.DONE);
+
+            // Return order info to frontend
+            return ResponseEntity.ok(
+                    new ApiResponse("Order created successfully after eSewa payment", orderService.convertToDto(order))
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse("Failed to create order after eSewa payment", e.getMessage()));
+        }
+    }
 
 
 }

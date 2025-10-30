@@ -303,7 +303,8 @@ public class OrderService implements IOrderService {
         order.setDropLocation(dropLocation);
         order.setLandmark(landmark);
         order.setReceiverContact(receiverContact);
-        order.setPaymentStatus(PaymentStatus.UNPAID);
+        order.setPaymentStatus(PaymentStatus.DONE);
+        order.setPaymentScreenshotUrl("");
         order.setOrderStatus(OderStatus.PENDING);
 
         // Convert cart items to order items
