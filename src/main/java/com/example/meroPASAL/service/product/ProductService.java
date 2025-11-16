@@ -130,7 +130,7 @@ public class ProductService implements IProductService {
             // user not logged in
         }
 
-        // ❌ remove price sorting here
+
         List<Product> allProducts = productRepo.findAll();
 
         if (customer == null) {
@@ -188,7 +188,7 @@ public class ProductService implements IProductService {
         prioritized.sort(Comparator.comparing(Product::getPrice));
         others.sort(Comparator.comparing(Product::getPrice));
 
-        // Merge: prioritized first
+        // Merge: prioritized firstre
         prioritized.addAll(others);
         return prioritized;
     }

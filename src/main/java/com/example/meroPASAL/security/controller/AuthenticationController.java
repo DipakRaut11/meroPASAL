@@ -35,6 +35,7 @@ public class AuthenticationController {
 
     @PostMapping("/signup/shopkeeper")
     public ResponseEntity<SignUpResponse> signupShopkeeper(
+            @Valid
             @RequestParam String name,
             @RequestParam String email,
             @RequestParam String password,
