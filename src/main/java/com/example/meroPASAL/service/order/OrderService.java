@@ -12,7 +12,10 @@ import com.example.meroPASAL.model.Cart;
 import com.example.meroPASAL.model.Order;
 import com.example.meroPASAL.model.OrderItem;
 import com.example.meroPASAL.model.Product;
+import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.service.cart.CartService;
+import com.example.meroPASAL.service.product.ProductService;
+import com.example.meroPASAL.service.recommendation.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -33,8 +36,9 @@ public class OrderService implements IOrderService {
     private final OrderRepository orderRpository;
     private final ProductRepo productRepository;
     private final CartService cartService;
-    private final ModelMapper modelMapper;
+
      private final FileStorageService fileStorageService;
+    private final RecommendationService recommendationService;
 
 
     // ------------------- CUSTOMER -------------------
@@ -79,12 +83,33 @@ public class OrderService implements IOrderService {
     }
 
     private List<OrderItem> createOrderItems(Order order, Cart cart) {
+
+        Customer customer = (Customer) order.getUser();
+
         return cart.getItems()
                 .stream()
                 .map(cartItem -> {
+
                     Product product = cartItem.getProduct();
+
+                    // reduce stock
                     product.setInventory(product.getInventory() - cartItem.getQuantity());
                     productRepository.save(product);
+
+                    // ================= AI TRAINING HERE =================
+                    recommendationService.updatePreference(
+                            customer,
+                            "category",
+                            product.getCategory().getName(),
+                            3
+                    );
+
+                    recommendationService.updatePreference(
+                            customer,
+                            "brand",
+                            product.getBrand(),
+                            3
+                    );
 
                     return new OrderItem(
                             order,
@@ -94,7 +119,6 @@ public class OrderService implements IOrderService {
                     );
                 }).toList();
     }
-
     private BigDecimal calculateTotalAmount(List<OrderItem> orderItemList) {
         return orderItemList.stream()
                 .map(item -> item.getPrice().multiply(new BigDecimal(item.getQuantity())))

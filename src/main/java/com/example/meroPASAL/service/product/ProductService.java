@@ -1,28 +1,21 @@
 package com.example.meroPASAL.service.product;
 
-import com.example.meroPASAL.Repository.CategoryRepo;
-import com.example.meroPASAL.Repository.ImageRepos;
-import com.example.meroPASAL.Repository.ProductRepo;
-import com.example.meroPASAL.Repository.SearchHistoryRepo;
+import com.example.meroPASAL.Repository.*;
 import com.example.meroPASAL.Repository.order.OrderItemRepo;
-import com.example.meroPASAL.Repository.order.OrderRepository;
 import com.example.meroPASAL.dto.ImageDto;
 import com.example.meroPASAL.dto.ProductDto;
 import com.example.meroPASAL.exception.ResourceAlreadyExistException;
 import com.example.meroPASAL.exception.ResourceNotFoundException;
-import com.example.meroPASAL.model.Category;
-import com.example.meroPASAL.model.Image;
-import com.example.meroPASAL.model.Product;
-import com.example.meroPASAL.model.SearchHistory;
+import com.example.meroPASAL.model.*;
 import com.example.meroPASAL.security.service.AuthenticationService;
 import com.example.meroPASAL.security.userModel.Customer;
 import com.example.meroPASAL.security.userModel.Shopkeeper;
 import com.example.meroPASAL.request.product.AddProductRequest;
 import com.example.meroPASAL.request.product.ProductUpdateRequest;
+import com.example.meroPASAL.service.recommendation.RecommendationService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -39,6 +32,7 @@ public class ProductService implements IProductService {
     private final AuthenticationService authService;
     private final OrderItemRepo orderItemRepo;
     private final SearchHistoryRepo searchHistoryRepo;
+    private final RecommendationService recommendationService;
 
     // ---------------- ADD PRODUCT ----------------
     @Override
@@ -79,19 +73,19 @@ public class ProductService implements IProductService {
     }
 
     // ---------------- DELETE ----------------
+    @Transactional
     @Override
     public void deleteProduct(Long id) {
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id " + id));
 
-        // Check if this product exists in any order
-        if (orderItemRepo.existsByProduct_Id(product.getId())) {
-            throw new IllegalStateException(
-                    "This product has been ordered by some customer and cannot be deleted until it is removed from orders."
-            );
+        boolean exists = orderItemRepo.existsByProductId(product.getId());
+
+        if (exists) {
+            throw new IllegalStateException("Product already used in orders. Cannot delete.");
         }
 
-        productRepo.delete(product);
+        productRepo.deleteById(id); // safer than delete(entity)
     }
 
 
@@ -118,79 +112,75 @@ public class ProductService implements IProductService {
 
     // ---------------- CUSTOMER ----------------
 
-        @Override
+    @Override
     public List<Product> getAllProducts() {
+
         Customer customer = null;
+
         try {
             var user = authService.getAuthenticatedUser();
             if (user instanceof Customer c) {
                 customer = c;
             }
-        } catch (RuntimeException e) {
-            // user not logged in
+        } catch (Exception e) {
+            customer = null;
         }
 
+        List<Product> products = productRepo.findAll();
 
-        List<Product> allProducts = productRepo.findAll();
-
+        // guest user → simple sorting
         if (customer == null) {
-            // anonymous user → just show by price
-            return allProducts.stream()
+            return products.stream()
                     .sorted(Comparator.comparing(Product::getPrice))
                     .toList();
         }
 
-        List<SearchHistory> recentSearches = searchHistoryRepo
-                .findByCustomerOrderByIdDesc(customer, PageRequest.of(0, 5))
-                .getContent();
+        // load learned preferences
+        List<UserPreference> prefs = recommendationService.getPreferences(customer);
 
-        if (recentSearches.isEmpty()) {
-            return allProducts.stream()
-                    .sorted(Comparator.comparing(Product::getPrice))
-                    .toList();
-        }
+        Map<String, Integer> categoryWeight = new HashMap<>();
+        Map<String, Integer> brandWeight = new HashMap<>();
 
-        Set<String> searchBrands = new HashSet<>();
-        Set<String> searchCategories = new HashSet<>();
-        Set<String> searchNames = new HashSet<>();
-
-        for (SearchHistory sh : recentSearches) {
-            String value = sh.getSearchValue().toLowerCase();
-            switch (sh.getSearchType()) {
-                case "brand" -> searchBrands.add(value);
-                case "category" -> searchCategories.add(value);
-                case "name" -> searchNames.add(value);
+        for (UserPreference p : prefs) {
+            if (p.getType().equals("category")) {
+                categoryWeight.put(p.getValue(), p.getWeight());
+            } else if (p.getType().equals("brand")) {
+                brandWeight.put(p.getValue(), p.getWeight());
             }
         }
 
-        List<Product> prioritized = new ArrayList<>();
-        List<Product> others = new ArrayList<>();
+        List<ScoredProduct> scored = new ArrayList<>();
 
-        for (Product p : allProducts) {
-            boolean matches = false;
+        for (Product p : products) {
 
-            if (p.getBrand() != null &&
-                    searchBrands.stream().anyMatch(b -> p.getBrand().toLowerCase().contains(b))) {
-                matches = true;
-            } else if (p.getCategory() != null && p.getCategory().getName() != null &&
-                    searchCategories.stream().anyMatch(c -> p.getCategory().getName().toLowerCase().contains(c))) {
-                matches = true;
-            } else if (p.getName() != null &&
-                    searchNames.stream().anyMatch(n -> p.getName().toLowerCase().contains(n))) {
-                matches = true;
+            int score = 0;
+
+            // 🧠 AI LEARNING CORE
+            if (p.getCategory() != null) {
+                score += categoryWeight.getOrDefault(
+                        p.getCategory().getName().toLowerCase(), 0
+                );
             }
 
-            if (matches) prioritized.add(p);
-            else others.add(p);
+            if (p.getBrand() != null) {
+                score += brandWeight.getOrDefault(
+                        p.getBrand().toLowerCase(), 0
+                );
+            }
+
+            // 🔥 popularity boost
+            int orders = orderItemRepo.countByProduct_Id(p.getId());
+            score += Math.min(orders, 5);
+
+            scored.add(new ScoredProduct(p, score));
         }
 
-        // ✅ Sort each group by price separately
-        prioritized.sort(Comparator.comparing(Product::getPrice));
-        others.sort(Comparator.comparing(Product::getPrice));
+        // AI ranking
+        scored.sort((a, b) -> Integer.compare(b.score, a.score));
 
-        // Merge: prioritized firstre
-        prioritized.addAll(others);
-        return prioritized;
+        return scored.stream()
+                .map(s -> s.product)
+                .toList();
     }
 
 
@@ -198,9 +188,10 @@ public class ProductService implements IProductService {
     private static class ScoredProduct {
         Product product;
         int score;
-        ScoredProduct(Product p, int s) {
-            this.product = p;
-            this.score = s;
+
+        ScoredProduct(Product product, int score) {
+            this.product = product;
+            this.score = score;
         }
     }
 
@@ -215,17 +206,27 @@ public class ProductService implements IProductService {
     // ---------------- FILTER ----------------
     @Override
     public List<Product> getProductsByCategory(String category) {
+
         Customer customer = (Customer) authService.getAuthenticatedUser();
+
+        recommendationService.updatePreference(customer, "category", category, 1);
+
         SearchHistory history = new SearchHistory("category", category, customer);
         searchHistoryRepo.save(history);
+
         return productRepo.findByCategory_Name(category);
     }
 
     @Override
     public List<Product> getProductByBrand(String brand) {
+
         Customer customer = (Customer) authService.getAuthenticatedUser();
+
+        recommendationService.updatePreference(customer, "brand", brand, 1);
+
         SearchHistory history = new SearchHistory("brand", brand, customer);
         searchHistoryRepo.save(history);
+
         return productRepo.findByBrand(brand);
     }
 
